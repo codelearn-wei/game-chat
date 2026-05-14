@@ -16,7 +16,7 @@ page { background: #080810; color: #e8eaf2; }
   border: 1rpx solid #252545;
   border-radius: 16rpx;
   padding: 22rpx 24rpx;
-  color: #e8eaf2;
+  color: #e8eaf2 !important;
   font-size: 30rpx;
   box-sizing: border-box;
 }

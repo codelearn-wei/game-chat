@@ -5,7 +5,8 @@
     <view class="form-label">她叫什么名字</view>
     <input
       class="form-input"
-      style="color:#e8eaf2;"
+      color="#e8eaf2"
+      cursor-color="#9d5df0"
       placeholder="小红 / 敖敦山 / 小桂..."
       placeholder-style="color:#555878;"
       bindinput="onNameInput"

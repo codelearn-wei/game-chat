@@ -3,14 +3,13 @@
   <!-- 女生名字 -->
   <view class="form-section">
     <view class="form-label">她叫什么名字</view>
-    <input
-      class="form-input"
-      color="#e8eaf2"
-      cursor-color="#9d5df0"
+    <textarea
+      class="form-textarea name-input"
       placeholder="小红 / 敖敦山 / 小桂..."
       placeholder-style="color:#555878;"
       bindinput="onNameInput"
       maxlength="20"
+      auto-height
     />
   </view>
 

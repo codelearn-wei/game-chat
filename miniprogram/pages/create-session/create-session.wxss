@@ -1,5 +1,5 @@
 page { background: #080810; color: #e8eaf2; }
-.page { min-height: 100vh; background: #080810; padding: 72rpx 28rpx 80rpx; }
+.page { min-height: 100vh; background: #080810; padding: 100rpx 28rpx 80rpx; }
 
 .form-section { margin-bottom: 32rpx; }
 .form-label {
@@ -16,7 +16,7 @@ page { background: #080810; color: #e8eaf2; }
   border: 1rpx solid #252545;
   border-radius: 16rpx;
   padding: 22rpx 24rpx;
-  color: #e8eaf2 !important;
+  color: #e8eaf2;
   font-size: 30rpx;
   box-sizing: border-box;
 }
@@ -31,6 +31,10 @@ page { background: #080810; color: #e8eaf2; }
   line-height: 1.7;
   min-height: 120rpx;
   box-sizing: border-box;
+}
+.name-input {
+  font-size: 30rpx;
+  min-height: 80rpx;
 }
 
 /* Goal buttons */

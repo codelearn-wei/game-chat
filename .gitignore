@@ -11,6 +11,8 @@ venv/
 
 # SQLite 数据库（运行时生成，不提交）
 backend/data/*.db
+backend/data/*.db-shm
+backend/data/*.db-wal
 
 # 运行时日志
 deploy/tunnel_stdout.log

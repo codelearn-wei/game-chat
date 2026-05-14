@@ -1,5 +1,5 @@
 page { background: #080810; color: #e8eaf2; }
-.page { min-height: 100vh; background: #080810; padding: 28rpx 28rpx 80rpx; }
+.page { min-height: 100vh; background: #080810; padding: 72rpx 28rpx 80rpx; }
 
 .form-section { margin-bottom: 32rpx; }
 .form-label {

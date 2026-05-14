@@ -1,6 +1,5 @@
-# ============================================================
-# setup_github.ps1
-# 一键创建 GitHub 仓库 + 推送代码
+﻿# ============================================================
+# setup_github.ps1 - 一键创建 GitHub 仓库 + 推送代码
 # 使用前：在 GitHub 创建 Personal Access Token（classic），勾选 repo 权限
 #   https://github.com/settings/tokens/new
 # ============================================================
@@ -44,24 +43,30 @@ try {
 
 # 创建仓库
 Write-Host "[1/3] 创建 GitHub 仓库 $RepoName ..."
-$body = @{
+$repoBody = @{
     name        = $RepoName
-    description = "GameChat - AI 聊天回复顾问（WeChat Miniprogram + FastAPI）"
+    description = "GameChat - AI 聊天回复顾问"
     private     = $false
 } | ConvertTo-Json -Compress
 
+$createParams = @{
+    Uri         = "https://api.github.com/user/repos"
+    Method      = "Post"
+    Headers     = $headers
+    Body        = $repoBody
+    ContentType = "application/json"
+}
+
 try {
-    $repo = Invoke-RestMethod -Uri "https://api.github.com/user/repos" `
-        -Method Post -Headers $headers -Body $body -ContentType "application/json"
+    $repo = Invoke-RestMethod @createParams
     $RemoteUrl = $repo.clone_url
     Write-Host "    仓库已创建：$RemoteUrl" -ForegroundColor Green
 } catch {
-    # 可能仓库已存在
     $RemoteUrl = "https://github.com/$Username/$RepoName.git"
     Write-Host "    仓库可能已存在，使用：$RemoteUrl" -ForegroundColor Yellow
 }
 
-# 设置 remote（使用 token 内嵌认证）
+# 设置 remote（token 内嵌认证）
 Write-Host "[2/3] 设置 git remote ..."
 $AuthUrl = $RemoteUrl -replace "https://", "https://$($Token)@"
 git remote remove origin 2>$null
@@ -79,16 +84,16 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "  仓库地址 : https://github.com/$Username/$RepoName" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "=== 下一步：在 Render 部署后端 ===" -ForegroundColor Yellow
-    Write-Host "  1. 打开 https://render.com → New + → Web Service"
+    Write-Host "  1. 打开 https://render.com -> New + -> Web Service"
     Write-Host "  2. 连接 GitHub 仓库：$Username/$RepoName"
-    Write-Host "  3. 配置（render.yaml 会自动检测，或手动填写）："
+    Write-Host "  3. 配置（render.yaml 会自动检测，确认以下即可）："
     Write-Host "       Root Directory : backend"
     Write-Host "       Build Command  : pip install -r requirements.txt"
     Write-Host "       Start Command  : uvicorn main:app --host 0.0.0.0 --port `$PORT"
     Write-Host "  4. Environment Variables 中添加："
     Write-Host "       DEEPSEEK_API_KEY = sk-你的真实key"
     Write-Host "  5. 点击 Create Web Service，等待部署完成（约 3-5 分钟）"
-    Write-Host "  6. 部署成功后，复制 https://game-chat-backend-xxxx.onrender.com 地址"
+    Write-Host "  6. 复制 https://game-chat-backend-xxxx.onrender.com 地址"
     Write-Host "  7. 运行：.\deploy\set_render_url.ps1 https://game-chat-backend-xxxx.onrender.com"
 } else {
     Write-Host "推送失败，请检查 Token 权限或网络" -ForegroundColor Red

@@ -21,10 +21,12 @@ function request(method, path, data) {
       },
       fail(err) {
         const errMsg = err.errMsg || '';
-        if (errMsg.includes('ERR_CONNECTION_REFUSED') || errMsg.includes('failed')) {
-          reject(new Error('无法连接服务器，请确认：\n1. 手机和电脑在同一WiFi\n2. 后端程序正在运行'));
+        if (errMsg.includes('domain') || errMsg.includes('invalid url')) {
+          reject(new Error('域名未加入白名单，请联系管理员'));
+        } else if (errMsg.includes('ERR_CONNECTION_REFUSED')) {
+          reject(new Error('无法连接服务器，请稍后重试'));
         } else {
-          reject(new Error('网络请求失败：' + errMsg));
+          reject(new Error('网络请求失败，请检查网络后重试'));
         }
       },
     });

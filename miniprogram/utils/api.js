@@ -21,8 +21,8 @@ function request(method, path, data) {
       },
       fail(err) {
         const errMsg = err.errMsg || '';
-        if (errMsg.includes('domain') || errMsg.includes('invalid url')) {
-          reject(new Error('域名未加入白名单，请联系管理员'));
+        if (errMsg.includes('domain') || errMsg.includes('not in domain list')) {
+          reject(new Error('网络配置错误，请联系开发者'));
         } else if (errMsg.includes('ERR_CONNECTION_REFUSED')) {
           reject(new Error('无法连接服务器，请稍后重试'));
         } else {

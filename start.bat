@@ -1,0 +1,3 @@
+@echo off
+echo 启动 AI 聊天框架后端服务...
+d:\code\conda\python.exe -m uvicorn main:app --reload --port 8000 --app-dir %~dp0backend

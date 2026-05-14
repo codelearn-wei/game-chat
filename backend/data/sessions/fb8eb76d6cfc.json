@@ -1,0 +1,107 @@
+{
+  "session_id": "fb8eb76d6cfc",
+  "title": "小明追晓雯-测试",
+  "persona_a": {
+    "name": "小明",
+    "description": "25岁男生，喜欢运动，想追喜欢的女生",
+    "background": "互联网从业者，有些内向但真诚"
+  },
+  "persona_b": {
+    "name": "晓雯",
+    "description": "23岁设计师，独立自信，有自己的生活节奏",
+    "background": "喜欢旅行和摄影，不喜欢过于主动的人"
+  },
+  "skill_ids": [
+    "s001",
+    "s003"
+  ],
+  "messages": [
+    {
+      "message_id": "7d182c14",
+      "role": "A",
+      "content": "你好，好久没联系了",
+      "timestamp": "2026-05-13T00:27:52"
+    },
+    {
+      "message_id": "f0e02818",
+      "role": "B",
+      "content": "嗯，是挺久的，最近在忙什么？",
+      "timestamp": "2026-05-13T00:27:52"
+    },
+    {
+      "message_id": "772184ad",
+      "role": "A",
+      "content": "周末有没有空，我想请你吃个饭",
+      "timestamp": "2026-05-13T00:27:55"
+    },
+    {
+      "message_id": "ba3025f9",
+      "role": "B",
+      "content": "周末啊，我看看安排...应该有空吧，不过你请客的话，我要求可不低哦。",
+      "timestamp": "2026-05-13T00:27:55"
+    },
+    {
+      "message_id": "8de1a6e0",
+      "role": "A",
+      "content": "你平时喜欢去哪里玩？",
+      "timestamp": "2026-05-13T00:27:58"
+    },
+    {
+      "message_id": "c7173efc",
+      "role": "B",
+      "content": "喜欢去一些有意思的展或者咖啡馆，不过这个得看心情（笑）",
+      "timestamp": "2026-05-13T00:27:58"
+    },
+    {
+      "message_id": "93de3b96",
+      "role": "A",
+      "content": "我觉得你是个挺有趣的人，能多认识一下吗",
+      "timestamp": "2026-05-13T00:28:00"
+    },
+    {
+      "message_id": "5a818aca",
+      "role": "B",
+      "content": "现在不是已经在认识了嘛，不过我更看重一个人做事的态度和细节。",
+      "timestamp": "2026-05-13T00:28:00"
+    },
+    {
+      "message_id": "cf90e0e0",
+      "role": "A",
+      "content": "好呀，那你有什么建议？",
+      "timestamp": "2026-05-13T00:28:03"
+    },
+    {
+      "message_id": "a61c4b8c",
+      "role": "B",
+      "content": "建议啊...先别这么着急约饭，不如先从朋友圈互动开始？我可不想一开始就尴尬。",
+      "timestamp": "2026-05-13T00:28:03"
+    },
+    {
+      "message_id": "133a8dab",
+      "role": "A",
+      "content": "我最近在学冲浪，你有没有兴趣一起试试",
+      "timestamp": "2026-05-13T00:28:05"
+    },
+    {
+      "message_id": "ea82a4bf",
+      "role": "B",
+      "content": "冲浪？（轻笑）挺新鲜的提议，不过我更喜欢看别人摔进水里的样子。你确定要我来看你出丑吗？",
+      "timestamp": "2026-05-13T00:28:05"
+    },
+    {
+      "message_id": "fb241221",
+      "role": "A",
+      "content": "你好",
+      "timestamp": "2026-05-13T14:55:13"
+    },
+    {
+      "message_id": "b855e06f",
+      "role": "B",
+      "content": "嗯？怎么突然这么正式，刚才不是聊得好好的吗？",
+      "timestamp": "2026-05-13T14:55:13"
+    }
+  ],
+  "memory_summary": "",
+  "created_at": "2026-05-13T00:27:51",
+  "updated_at": "2026-05-13T14:55:13"
+}

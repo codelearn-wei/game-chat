@@ -1,0 +1,75 @@
+page { background: #080810; color: #e8eaf2; }
+.page { min-height: 100vh; background: #080810; padding: 28rpx 28rpx 80rpx; }
+
+.form-section { margin-bottom: 32rpx; }
+.form-label {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #8b8fa8;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  margin-bottom: 14rpx;
+}
+.form-input {
+  width: 100%;
+  background: #141428;
+  border: 1rpx solid #252545;
+  border-radius: 16rpx;
+  padding: 22rpx 24rpx;
+  color: #e8eaf2;
+  font-size: 30rpx;
+  box-sizing: border-box;
+}
+.form-textarea {
+  width: 100%;
+  background: #141428;
+  border: 1rpx solid #252545;
+  border-radius: 16rpx;
+  padding: 22rpx 24rpx;
+  color: #e8eaf2;
+  font-size: 27rpx;
+  line-height: 1.7;
+  min-height: 120rpx;
+  box-sizing: border-box;
+}
+
+/* Goal buttons */
+.goal-group { display: flex; gap: 20rpx; }
+.goal-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  padding: 24rpx 0;
+  background: #141428;
+  border: 2rpx solid #252545;
+  border-radius: 18rpx;
+}
+.goal-btn.selected {
+  background: rgba(124,58,237,.12);
+  border-color: #7c3aed;
+}
+.goal-icon { font-size: 44rpx; }
+.goal-text { font-size: 26rpx; font-weight: 600; color: #8b8fa8; }
+.goal-btn.selected .goal-text { color: #9d5df0; }
+
+.form-tip {
+  font-size: 24rpx;
+  color: #555878;
+  margin: 24rpx 0 36rpx;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.btn-confirm {
+  background: #7c3aed;
+  color: #fff;
+  padding: 30rpx;
+  border-radius: 20rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 8rpx 30rpx rgba(124,58,237,.4);
+}
+.btn-confirm.disabled { opacity: .5; }

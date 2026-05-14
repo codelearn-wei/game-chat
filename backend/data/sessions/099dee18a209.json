@@ -1,0 +1,22 @@
+{
+  "session_id": "099dee18a209",
+  "title": "新对话",
+  "persona_a": {
+    "name": "小明",
+    "description": "25岁男生，想追喜欢的女生",
+    "background": ""
+  },
+  "persona_b": {
+    "name": "晓雯",
+    "description": "23岁独立女生，有自己的生活节奏",
+    "background": ""
+  },
+  "skill_ids": [
+    "s001",
+    "s003"
+  ],
+  "messages": [],
+  "memory_summary": "",
+  "created_at": "2026-05-13T14:58:02",
+  "updated_at": "2026-05-13T14:58:02"
+}

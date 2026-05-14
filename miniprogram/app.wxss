@@ -1,0 +1,49 @@
+/* 全局基础样式 */
+page {
+  background-color: #0f0f1a;
+  color: #e2e8f0;
+  font-family: -apple-system, 'PingFang SC', sans-serif;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+/* 通用按钮 */
+.btn-primary {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  padding: 18rpx 36rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background: #2a2a4a;
+  color: #94a3b8;
+  border: none;
+  border-radius: 12rpx;
+  padding: 18rpx 36rpx;
+  font-size: 28rpx;
+}
+
+/* 通用卡片 */
+.card {
+  background: #1a1a2e;
+  border: 2rpx solid #2a2a4a;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+/* 加载 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60rpx;
+  color: #64748b;
+  font-size: 28rpx;
+}

@@ -1,0 +1,43 @@
+<view class="page">
+  <!-- 顶部 Logo -->
+  <view class="top-bar">
+    <text class="logo">Game<text class="logo-accent">Chat</text></text>
+    <text class="top-sub">高价值回复顾问</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="center-box">
+    <view class="spinner"></view>
+    <text class="hint">加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{convList.length === 0}}" class="center-box">
+    <text class="empty-icon">💬</text>
+    <text class="empty-title">还没有聊天</text>
+    <text class="empty-sub">创建一个聊天，开始分析回复</text>
+    <view class="btn-create" bindtap="goCreate">+ 新建聊天</view>
+  </view>
+
+  <!-- 会话列表 -->
+  <scroll-view wx:else scroll-y class="list">
+    <view class="conv-item" wx:for="{{convList}}" wx:key="id"
+          bindtap="goAdvisor" data-id="{{item.id}}" data-name="{{item.name}}">
+      <view class="conv-avatar">{{item.initial}}</view>
+      <view class="conv-info">
+        <view class="conv-row">
+          <text class="conv-name">{{item.name}}</text>
+          <text class="conv-badge conv-badge-{{item.goalKey}}">{{item.goal}}</text>
+        </view>
+        <view class="conv-row">
+          <text class="conv-stage" wx:if="{{item.stage}}">{{item.stage}}</text>
+          <text class="conv-time">{{item.timeStr}}</text>
+        </view>
+      </view>
+      <view class="conv-del" catchtap="deleteConv" data-id="{{item.id}}">×</view>
+    </view>
+  </scroll-view>
+
+  <!-- 悬浮按钮 -->
+  <view class="fab" bindtap="goCreate">+</view>
+</view>

@@ -1,0 +1,52 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="loading">加载中…</view>
+
+  <block wx:else>
+    <!-- 分类过滤 -->
+    <scroll-view scroll-x class="cat-bar">
+      <view
+        class="cat-tag {{filterCategory === 'all' ? 'active' : ''}}"
+        bindtap="setFilter" data-cat="all"
+      >全部</view>
+      <view
+        wx:for="{{categories}}" wx:key="*this"
+        class="cat-tag {{filterCategory === item ? 'active' : ''}}"
+        bindtap="setFilter" data-cat="{{item}}"
+      >{{item}}</view>
+    </scroll-view>
+
+    <!-- 技能卡片 -->
+    <view
+      wx:for="{{skills}}"
+      wx:key="skill_id"
+      class="skill-card card {{selectedIds.has ? '' : ''}}"
+      bindtap="toggleSkill"
+      data-id="{{item.skill_id}}"
+    >
+      <view class="sk-header">
+        <view>
+          <text class="sk-name">{{item.name}}</text>
+          <text class="sk-cat">{{item.category}}</text>
+        </view>
+        <view class="sk-check" wx:if="{{sessionId}}">
+          <!-- 选中状态由 js 维护，简单显示 ● ○ -->
+          <text class="check-icon">{{item.skill_id}}</text>
+        </view>
+      </view>
+      <view class="sk-tone">语调：{{item.tone}}</view>
+      <view class="sk-desc">{{item.description}}</view>
+      <view class="sk-examples" wx:if="{{item.examples.length > 0}}">
+        <view class="example" wx:for="{{item.examples}}" wx:for-item="ex" wx:key="context" wx:if="{{index < 2}}">
+          <text class="ex-context">情境：{{ex.context}}</text>
+          <text class="ex-response">回复：{{ex.response}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 底部操作栏（从聊天进入时显示）-->
+  <view class="bottom-bar" wx:if="{{sessionId}}">
+    <button class="btn-secondary" bindtap="resetSkills">↺ 重置默认</button>
+    <button class="btn-primary" bindtap="applySkills">✓ 应用到会话</button>
+  </view>
+</view>

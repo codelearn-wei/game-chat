@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: game-chat-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        sync: false          # 在 Render 控制台手动填入真实 Key，不提交到 Git
+      - key: PYTHON_VERSION
+        value: 3.11.0

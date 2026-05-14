@@ -1,0 +1,116 @@
+page { background: #080810; color: #e8eaf2; }
+
+.page { min-height: 100vh; background: #080810; padding-bottom: 120rpx; }
+
+/* Top bar */
+.top-bar {
+  padding: 24rpx 30rpx 16rpx;
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+  border-bottom: 1rpx solid #252545;
+}
+.logo { font-size: 36rpx; font-weight: 700; color: #e8eaf2; }
+.logo-accent { color: #7c3aed; }
+.top-sub { font-size: 22rpx; color: #555878; }
+
+/* Center states */
+.center-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 40rpx;
+  gap: 20rpx;
+}
+.spinner {
+  width: 60rpx; height: 60rpx;
+  border: 4rpx solid #252545;
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.hint { font-size: 26rpx; color: #555878; }
+.empty-icon { font-size: 100rpx; opacity: .25; }
+.empty-title { font-size: 32rpx; font-weight: 600; color: #e8eaf2; }
+.empty-sub { font-size: 26rpx; color: #555878; text-align: center; }
+.btn-create {
+  margin-top: 12rpx;
+  padding: 18rpx 48rpx;
+  background: #7c3aed;
+  color: #fff;
+  border-radius: 18rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+/* List */
+.list { height: calc(100vh - 140rpx); }
+.conv-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx 28rpx;
+  border-bottom: 1rpx solid #181830;
+  background: #080810;
+}
+.conv-avatar {
+  width: 72rpx; height: 72rpx;
+  border-radius: 18rpx;
+  background: #1a1a35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #7c3aed;
+  flex-shrink: 0;
+}
+.conv-info { flex: 1; }
+.conv-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 6rpx;
+}
+.conv-name { font-size: 30rpx; font-weight: 600; color: #e8eaf2; }
+.conv-badge {
+  font-size: 20rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+  font-weight: 600;
+}
+.conv-badge-love   { background: rgba(236,72,153,.15); color: #f472b6; }
+.conv-badge-friend { background: rgba(249,115,22,.15);  color: #fb923c; }
+.conv-badge-normal { background: rgba(16,185,129,.15);  color: #34d399; }
+.conv-stage { font-size: 22rpx; color: #06b6d4; flex: 1; }
+.conv-time { font-size: 22rpx; color: #555878; margin-left: auto; }
+.conv-del {
+  width: 48rpx; height: 48rpx;
+  background: rgba(239,68,68,.12);
+  color: #ef4444;
+  border-radius: 10rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: 80rpx;
+  width: 96rpx; height: 96rpx;
+  border-radius: 50%;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 30rpx rgba(124,58,237,.5);
+  line-height: 96rpx;
+  text-align: center;
+}

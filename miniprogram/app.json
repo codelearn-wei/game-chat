@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/chat/chat",
+    "pages/create-session/create-session"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#0d0d1a",
+    "navigationBarTitleText": "GameChat",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#080810"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

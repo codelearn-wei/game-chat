@@ -1,0 +1,57 @@
+<view class="page">
+
+  <!-- 女生名字 -->
+  <view class="form-section">
+    <view class="form-label">她叫什么名字</view>
+    <input
+      class="form-input"
+      style="color:#e8eaf2;"
+      placeholder="小红 / 敖敦山 / 小桂..."
+      placeholder-style="color:#555878;"
+      bindinput="onNameInput"
+      maxlength="20"
+    />
+  </view>
+
+  <!-- 目标选择 -->
+  <view class="form-section">
+    <view class="form-label">你们的关系目标</view>
+    <view class="goal-group">
+      <view class="goal-btn {{goal==='恋爱'?'selected':''}}"
+            data-goal="恋爱" bindtap="selectGoal">
+        <text class="goal-icon">💕</text>
+        <text class="goal-text">恋爱</text>
+      </view>
+      <view class="goal-btn {{goal==='玩伴'?'selected':''}}"
+            data-goal="玩伴" bindtap="selectGoal">
+        <text class="goal-icon">✨</text>
+        <text class="goal-text">玩伴</text>
+      </view>
+      <view class="goal-btn {{goal==='普通朋友'?'selected':''}}"
+            data-goal="普通朋友" bindtap="selectGoal">
+        <text class="goal-icon">🤝</text>
+        <text class="goal-text">普通朋友</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 備注 -->
+  <view class="form-section">
+    <view class="form-label">背景备注（可选）</view>
+    <textarea
+      class="form-textarea"
+      placeholder="如：认识多久了、我们如何认识的、她的大致性格..."
+      bindinput="onNotesInput"
+      maxlength="300"
+      auto-height
+    />
+  </view>
+
+  <view class="form-tip">创建后可在回复建议页展开对话分析</view>
+
+  <view class="btn-confirm {{creating?'disabled':''}}" bindtap="confirm">
+    <text wx:if="{{!creating}}">✓ 开始分析</text>
+    <text wx:else>创建中...</text>
+  </view>
+
+</view>

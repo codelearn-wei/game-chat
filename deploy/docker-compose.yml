@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  game-chat:
+    build:
+      context: ..          # build context = game_chat/ 目录
+      dockerfile: deploy/Dockerfile
+    container_name: game-chat-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data   # 持久化 SQLite 数据库（game_chat/data/）
+    env_file:
+      - ../.env             # 生产环境变量（含 DEEPSEEK_API_KEY）
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

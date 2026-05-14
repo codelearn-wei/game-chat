@@ -1,0 +1,169 @@
+<view class="page">
+
+  <!-- Tab 切换栏 -->
+  <view class="tab-bar">
+    <view class="tab {{activeTab==='advisor'?'active':''}}" data-tab="advisor" bindtap="switchTab">✶ 回复建议</view>
+    <view class="tab {{activeTab==='history'?'active':''}}" data-tab="history" bindtap="switchTab">💬 对话记录</view>
+    <view class="tab {{activeTab==='summary'?'active':''}}" data-tab="summary" bindtap="switchTab">📊 关系摘要</view>
+  </view>
+
+  <!-- 回复建议 Tab -->
+  <scroll-view wx:if="{{activeTab==='advisor'}}" scroll-y class="tab-content">
+
+    <!-- 输入区 -->
+    <view class="input-card">
+      <view class="input-label">她发来了什么？</view>
+      <textarea
+        class="msg-input"
+        placeholder="粘贴她刚发的消息..."
+        bindinput="onInput"
+        maxlength="500"
+        auto-height
+      />
+      <view class="input-footer">
+        <text class="char-count">{{girlMsgLen}} / 500</text>
+        <view class="btn-analyze {{analyzing?'disabled':''}}" bindtap="doAnalyze">
+          <text wx:if="{{!analyzing}}">✶ 分析回复</text>
+          <text wx:else>分析中...</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载中 -->
+    <view wx:if="{{analyzing}}" class="loading-box">
+      <view class="spinner"></view>
+      <text>正在分析，请稍候...</text>
+    </view>
+
+    <!-- 结果区域（不会自动消失）-->
+    <block wx:if="{{result && !analyzing}}">
+
+      <!-- 策略拖条 -->
+      <view class="strategy-banner">
+        <view class="strategy-lbl">策略分析</view>
+        <view class="strategy-text">{{result.overall_strategy}}</view>
+        <view class="next-dir" wx:if="{{result.next_direction}}">→ {{result.next_direction}}</view>
+      </view>
+
+      <!-- 风格卡片列表 -->
+      <view class="style-list">
+        <view class="style-card style-{{index}}"
+              wx:for="{{result.styles}}" wx:key="style_name">
+          <view class="sc-head">
+            <text class="sc-icon">{{item.style_icon}}</text>
+            <view class="sc-meta">
+              <text class="sc-name">{{item.style_name}}</text>
+              <text class="sc-desc">{{item.style_desc}}</text>
+              <view class="skill-tag" wx:if="{{item.used_skill}}">🎯 {{item.used_skill}}</view>
+            </view>
+          </view>
+          <view class="reply-list">
+            <view class="reply-item" wx:for="{{item.replies}}" wx:key="*this" wx:for-item="r" wx:for-index="ri">
+              <text class="reply-text">{{r}}</text>
+              <view class="reply-btns">
+                <view class="btn-copy" data-text="{{r}}" bindtap="copyReply">复制</view>
+                <view class="btn-sent" data-text="{{r}}" bindtap="markSent">✓ 已发送</view>
+              </view>
+            </view>
+          </view>
+          <view class="sc-reasoning">{{item.reasoning}}</view>
+        </view>
+      </view>
+
+      <!-- 反馈重生 -->
+      <view class="feedback-card">
+        <view class="fb-label">⚡ 不满意？告诉我哪里不够好</view>
+        <textarea
+          class="fb-input"
+          placeholder="如：太直白了 / 要更冷一点 / 需要更有趣..."
+          value="{{feedback}}"
+          bindinput="onFbInput"
+          maxlength="200"
+          auto-height
+        />
+        <view class="btn-regen {{reging?'disabled':''}}" bindtap="doFeedback">
+          <text wx:if="{{!reging}}">重新生成</text>
+          <text wx:else>生成中...</text>
+        </view>
+      </view>
+
+    </block>
+  </scroll-view>
+
+  <!-- 对话记录 Tab -->
+  <scroll-view wx:if="{{activeTab==='history'}}" scroll-y class="tab-content">
+    <view class="history-head">
+      <text class="section-label">对话记录</text>
+      <view class="btn-sm" bindtap="refreshHistory">↻ 刷新</view>
+    </view>
+    <view wx:if="{{messages.length===0}}" class="empty-hint">
+      <text>暂无记录，点「已发送」可记录到此</text>
+    </view>
+    <view class="chat-feed">
+      <view class="msg-group {{item.role==='girl'?'girl':'me'}}"
+            wx:for="{{messages}}" wx:key="id">
+        <view class="msg-av">{{item.role==='girl'?convInitial:'我'}}</view>
+        <view class="msg-wrap">
+          <view class="msg-bubble {{item.role==='girl'?'bubble-girl':'bubble-me'}}">{{item.content}}</view>
+          <view class="msg-time">{{item.timeStr}}</view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 关系摘要 Tab -->
+  <scroll-view wx:if="{{activeTab==='summary'}}" scroll-y class="tab-content">
+    <view class="history-head">
+      <text class="section-label">关系摘要</text>
+      <view class="btn-sm primary" bindtap="doSummarize">更新摘要</view>
+    </view>
+
+    <!-- 无摘要 -->
+    <view wx:if="{{!summary}}" class="empty-hint">
+      <text>暂无摘要，至少 4 条对话后点「更新摘要」</text>
+    </view>
+
+    <!-- 摘要卡片 -->
+    <block wx:if="{{summary}}">
+      <!-- 关系状态 -->
+      <view class="sum-card">
+        <view class="sum-title">关系状态</view>
+        <view class="stage-row">
+          <view class="stage-badge">{{summary.relationship_stage||'未知'}}</view>
+          <view class="momentum" style="color:{{momentumColor}}">{{momentumIcon}} {{summary.momentum||'平稳'}}</view>
+        </view>
+        <view class="progress-track">
+          <view class="progress-fill" style="width:{{progressPct}}%;background:{{momentumColor}}"></view>
+        </view>
+        <view class="progress-labels">
+          <text>陌生</text><text>初识</text><text>恕昧</text><text>升温</text><text>稳定</text>
+        </view>
+      </view>
+      <!-- 她的特点 -->
+      <view class="sum-card" wx:if="{{summary.her_traits&&summary.her_traits.length}}">
+        <view class="sum-title">她的特点</view>
+        <view class="chip-group">
+          <view class="chip chip-purple" wx:for="{{summary.her_traits}}" wx:key="*this">{{item}}</view>
+        </view>
+      </view>
+      <!-- 兴趣爱好 -->
+      <view class="sum-card" wx:if="{{summary.her_interests&&summary.her_interests.length}}">
+        <view class="sum-title">兴趣爱好</view>
+        <view class="chip-group">
+          <view class="chip chip-cyan" wx:for="{{summary.her_interests}}" wx:key="*this">{{item}}</view>
+        </view>
+      </view>
+      <!-- AI 总结 -->
+      <view class="sum-card" wx:if="{{summary.summary}}">
+        <view class="sum-title">AI 总结</view>
+        <view class="sum-text">{{summary.summary}}</view>
+      </view>
+      <!-- 推荐风格 -->
+      <view class="sum-card" wx:if="{{summary.recommended_style}}">
+        <view class="sum-title">推荐回复风格</view>
+        <view class="chip chip-gold">✶ {{summary.recommended_style}}</view>
+      </view>
+    </block>
+  </scroll-view>
+
+</view>

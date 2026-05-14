@@ -1,9 +1,9 @@
 {
   "description": "AI 聊天框架 - 微信小程序",
   "projectname": "ai-chat-framework",
-  "appid": "wx80e73230423f7b7f",
+  "appid": "wx33df3c190fa3ba56",
   "compileType": "miniprogram",
-  "libVersion": "3.3.4",
+  "libVersion": "3.16.0",
   "packOptions": {
     "ignore": [
       {
@@ -20,7 +20,7 @@
   "setting": {
     "coverView": true,
     "es6": true,
-    "enhance": true,
+    "enhance": false,
     "postcss": true,
     "minified": true,
     "newFeature": true,
@@ -34,7 +34,7 @@
     "uploadWithSourceMap": true,
     "compileHotReLoad": false,
     "lazyloadPlaceholderEnable": false,
-    "useMultiFrameRuntime": true,
+    "useMultiFrameRuntime": false,
     "useApiHook": true,
     "useApiHostProcess": true,
     "babelSetting": {
@@ -43,7 +43,7 @@
       "outputPath": ""
     },
     "enableEngineNative": false,
-    "useIsolateContext": true,
+    "useIsolateContext": false,
     "userConfirmedBundleSwitch": false,
     "packNpmManually": false,
     "packNpmRelationList": [],

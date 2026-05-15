@@ -1,12 +1,14 @@
 """
 ocr.py — 聊天截图 OCR 路由
-图片 base64 → 百度 OCR 通用文字识别 → 返回文本
+图片 base64 → 百度 OCR 通用文字识别 → DeepSeek 解析对话结构
 免费额度：每天 50,000 次（通用标准版）
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
+import re
 import time
 import urllib.parse
 
@@ -61,6 +63,55 @@ class ExtractRequest(BaseModel):
     conv_id: str = ""
 
 
+async def _parse_conversation_ai(raw_text: str) -> dict:
+    """用 DeepSeek 将原始 OCR 文本解析为结构化对话（识别谁说了什么）"""
+    from services.deepseek_client import deepseek
+
+    prompt = (
+        "你是微信聊天截图OCR文本解析器，请将以下OCR原始文字解析成结构化对话。\n\n"
+        "微信截图规律：\n"
+        "· 第一行通常是手机状态栏时间（如 17:03），忽略\n"
+        "· 第二行通常是聊天窗口名称（如 李屹坤 或 123(5)A），忽略\n"
+        "· 时间分隔行（如 15:17、16:02），忽略\n"
+        "· 右侧绿色气泡=我发的：OCR中直接出现消息，没有名字前缀\n"
+        "· 左侧白色气泡=对方发的：OCR中先一行是对方名字，下一行是消息内容\n"
+        "· 同一人连续发多条消息时，名字会在每条消息前重复出现\n\n"
+        f"OCR原文：\n{raw_text}\n\n"
+        "仅输出JSON，不加任何说明：\n"
+        '{"girl_name":"对方名字（不确定则写她）",'
+        '"messages":[{"role":"me","content":"消息"},{"role":"girl","content":"消息"}],'
+        '"last_girl_message":"对方最后说的话"}'
+    )
+
+    try:
+        raw = await deepseek.chat(
+            [{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=800,
+        )
+        try:
+            result = json.loads(raw.strip())
+        except json.JSONDecodeError:
+            m = re.search(r'\{.*\}', raw, re.DOTALL)
+            result = json.loads(m.group(0)) if m else {}
+
+        msgs = result.get("messages", [])
+        girl_name = result.get("girl_name", "她")
+        formatted = "\n".join(
+            f"我: {m['content']}" if m.get("role") == "me" else f"{girl_name}: {m['content']}"
+            for m in msgs
+        )
+        return {
+            "girl_name": girl_name,
+            "messages": msgs,
+            "last_girl_message": result.get("last_girl_message", ""),
+            "formatted_context": formatted,
+        }
+    except Exception as e:
+        logger.warning(f"[OCR] AI对话解析失败: {e}")
+        return {"girl_name": "她", "messages": [], "last_girl_message": "", "formatted_context": raw_text}
+
+
 @router.post("/extract")
 async def extract_screenshot(req: ExtractRequest):
     """
@@ -95,8 +146,21 @@ async def extract_screenshot(req: ExtractRequest):
         if not extracted:
             extracted = "未识别到文字，请换一张更清晰的截图"
 
-        logger.info(f"[Baidu OCR] 识别 {len(words)} 行")
-        return {"extracted_text": extracted, "conv_id": req.conv_id}
+        # 用 AI 解析对话结构（识别谁说了什么）
+        if extracted and not extracted.startswith("未识别"):
+            parsed = await _parse_conversation_ai(extracted)
+        else:
+            parsed = {"girl_name": "她", "messages": [], "last_girl_message": "", "formatted_context": extracted}
+
+        logger.info(f"[Baidu OCR] 识别 {len(words)} 行，解析 {len(parsed['messages'])} 条消息")
+        return {
+            "extracted_text": extracted,
+            "conv_id": req.conv_id,
+            "parsed_messages": parsed["messages"],
+            "girl_name": parsed["girl_name"],
+            "last_girl_message": parsed["last_girl_message"],
+            "formatted_context": parsed["formatted_context"],
+        }
 
     except HTTPException:
         raise

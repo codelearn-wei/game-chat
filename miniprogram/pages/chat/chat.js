@@ -28,7 +28,10 @@ Page({
 
     // screenshot OCR
     extracting: false,
-    extractedPreview: '',
+    extractedPreview: '',      // fallback 原始文本
+    parsedMessages: [],        // [{ role: 'me'|'girl', content }]
+    girlName: '她',
+    autoFilledMsg: '',         // OCR 自动识别的最新消息,
 
     // 模式 & 技能点
     mode: 'deep',          // 'quick' | 'deep'
@@ -84,16 +87,30 @@ Page({
       sourceType: ['album', 'camera'],
       success: (res) => {
         const filePath = res.tempFiles[0].tempFilePath;
-        this.setData({ extracting: true, extractedPreview: '' });
+        this.setData({ extracting: true, parsedMessages: [], extractedPreview: '', autoFilledMsg: '' });
         api.uploadScreenshot(this.data.convId, filePath)
           .then((data) => {
-            const text = (data.extracted_text || '').trim();
-            if (!text || text.startsWith('未识别')) {
+            const msgs = data.parsed_messages || [];
+            const lastGirl = (data.last_girl_message || '').trim();
+            const rawText = (data.extracted_text || '').trim();
+
+            if (msgs.length > 0) {
+              // 成功解析：展示气泡 + 自动填充最新消息
+              this._girlMsg = lastGirl || rawText;
+              this.setData({
+                parsedMessages: msgs,
+                girlName: data.girl_name || '她',
+                autoFilledMsg: lastGirl,
+                girlMsgLen: (lastGirl || rawText).length,
+                extractedPreview: '',
+              });
+            } else if (rawText && !rawText.startsWith('未识别')) {
+              // 降级：展示原始文本
+              this._girlMsg = rawText;
+              this.setData({ extractedPreview: rawText, girlMsgLen: rawText.length });
+            } else {
               wx.showToast({ title: '未识别到文字，请换张清晰截图', icon: 'none' });
-              return;
             }
-            this._girlMsg = text;
-            this.setData({ extractedPreview: text, girlMsgLen: text.length });
           })
           .catch((err) => {
             wx.showToast({ title: err.message || '识别失败', icon: 'none' });
@@ -112,7 +129,7 @@ Page({
 
   clearExtract() {
     this._girlMsg = '';
-    this.setData({ extractedPreview: '', girlMsgLen: 0 });
+    this.setData({ extractedPreview: '', parsedMessages: [], girlName: '她', autoFilledMsg: '', girlMsgLen: 0 });
   },
 
   tapMode(e) {

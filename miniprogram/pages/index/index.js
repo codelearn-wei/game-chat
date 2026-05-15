@@ -52,6 +52,10 @@ Page({
     wx.navigateTo({ url: '/pages/create-session/create-session' });
   },
 
+  goQuick() {
+    wx.navigateTo({ url: '/pages/quick/quick' });
+  },
+
   goAdvisor(e) {
     const { id, name } = e.currentTarget.dataset;
     wx.navigateTo({

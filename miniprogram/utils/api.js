@@ -47,10 +47,11 @@ const api = {
   getAnalysis: (id) => request('GET', `/api/conversations/${id}/analysis`),
 
   // ── 回复顾问 ──
-  analyzeMessage: (girlMessage, conversationId) =>
+  analyzeMessage: (girlMessage, conversationId, context) =>
     request('POST', '/api/advisor/analyze', {
       girl_message: girlMessage,
       conversation_id: conversationId || undefined,
+      context: context || '',
     }),
   feedbackRegen: (girlMessage, feedback, conversationId) =>
     request('POST', '/api/advisor/feedback', {

@@ -1,0 +1,269 @@
+/* pages/quick/quick.wxss — 速回模式样式 */
+page { background: #080810; color: #e8eaf2; }
+.page { min-height: 100vh; background: #080810; }
+
+/* ── 导航栏 ── */
+.qnav {
+  display: flex;
+  align-items: center;
+  padding: 88rpx 24rpx 16rpx;
+  border-bottom: 1rpx solid #181830;
+}
+.qnav-back {
+  font-size: 52rpx;
+  color: #7c3aed;
+  width: 80rpx;
+  line-height: 1;
+}
+.qnav-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+}
+.qnav-badge { font-size: 30rpx; }
+.qnav-title { font-size: 32rpx; font-weight: 700; color: #e8eaf2; }
+.qnav-ph { width: 80rpx; }
+
+/* ── 内容区 ── */
+.content { height: calc(100vh - 160rpx); }
+.page-sub {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: #555878;
+  padding: 16rpx 0 20rpx;
+}
+
+/* ── 模式切换段 ── */
+.seg-bar {
+  display: flex;
+  gap: 0;
+  margin: 0 24rpx 24rpx;
+  background: #141428;
+  border-radius: 14rpx;
+  padding: 6rpx;
+}
+.seg {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 26rpx;
+  color: #555878;
+  border-radius: 10rpx;
+}
+.seg-on {
+  background: #7c3aed;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── 上传区 ── */
+.upload-zone {
+  margin: 0 24rpx 24rpx;
+  background: #0f0f22;
+  border: 2rpx dashed rgba(124,58,237,.4);
+  border-radius: 20rpx;
+  padding: 60rpx 30rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+}
+.upload-loading { border-style: solid; }
+.uz-icon { font-size: 80rpx; }
+.uz-title { font-size: 30rpx; font-weight: 700; color: #e8eaf2; }
+.uz-sub { font-size: 23rpx; color: #555878; text-align: center; line-height: 1.6; }
+
+/* ── 对话气泡卡片 ── */
+.conv-card {
+  margin: 0 24rpx 20rpx;
+  background: #0f0f22;
+  border: 1rpx solid #252545;
+  border-radius: 18rpx;
+  padding: 20rpx 22rpx;
+}
+.cc-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.cc-name { font-size: 24rpx; font-weight: 700; color: #8b8fa8; }
+.cc-retry { font-size: 22rpx; color: #7c3aed; padding: 4rpx 12rpx; }
+.chat-bubbles { display: flex; flex-direction: column; gap: 10rpx; }
+.bbl-row { display: flex; }
+.bbl-me-row { justify-content: flex-end; }
+.bbl-girl-row { justify-content: flex-start; }
+.bbl { max-width: 75%; padding: 12rpx 18rpx; border-radius: 16rpx; font-size: 26rpx; line-height: 1.55; word-break: break-all; }
+.bbl-me {
+  background: rgba(124,58,237,.2);
+  border: 1rpx solid rgba(124,58,237,.35);
+  color: #e8eaf2;
+  border-radius: 16rpx 4rpx 16rpx 16rpx;
+}
+.bbl-girl {
+  background: #1a1a35;
+  color: #e8eaf2;
+  border-radius: 4rpx 16rpx 16rpx 16rpx;
+}
+
+/* 可编辑最新消息 */
+.last-edit-section {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #252545;
+}
+.last-edit-lbl { font-size: 21rpx; color: #10b981; display: block; margin-bottom: 10rpx; }
+.last-edit-input {
+  width: 100%;
+  background: #141428;
+  border: 1rpx solid rgba(124,58,237,.3);
+  border-radius: 12rpx;
+  padding: 14rpx 16rpx;
+  font-size: 27rpx;
+  color: #e8eaf2;
+  line-height: 1.6;
+  box-sizing: border-box;
+  min-height: 80rpx;
+}
+
+/* ── 手动输入 ── */
+.manual-card {
+  margin: 0 24rpx 20rpx;
+  background: #0f0f22;
+  border: 1rpx solid #252545;
+  border-radius: 18rpx;
+  padding: 20rpx 22rpx;
+}
+.mc-lbl { font-size: 24rpx; color: #8b8fa8; display: block; margin-bottom: 12rpx; }
+.mc-input {
+  width: 100%;
+  background: #141428;
+  border: 1rpx solid #252545;
+  border-radius: 12rpx;
+  padding: 14rpx 16rpx;
+  font-size: 28rpx;
+  color: #e8eaf2;
+  min-height: 160rpx;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+.mc-count { font-size: 20rpx; color: #555878; display: block; text-align: right; margin-top: 8rpx; }
+
+/* ── 分析按钮 ── */
+.ana-btn {
+  margin: 0 24rpx 24rpx;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  border-radius: 18rpx;
+  padding: 28rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 700;
+  box-shadow: 0 8rpx 24rpx rgba(124,58,237,.4);
+}
+.ana-disabled { opacity: 0.45; box-shadow: none; }
+
+/* ── Loading ── */
+.loading-box {
+  display: flex;
+  justify-content: center;
+  padding: 30rpx;
+}
+.spinner {
+  width: 56rpx; height: 56rpx;
+  border: 4rpx solid #252545;
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { from { transform: rotate(0) } to { transform: rotate(360deg) } }
+
+/* ── 结果区 ── */
+/* 潜台词 */
+.subtext-card {
+  margin: 0 24rpx 16rpx;
+  background: rgba(16,185,129,.06);
+  border: 1rpx solid rgba(16,185,129,.25);
+  border-left: 4rpx solid #10b981;
+  border-radius: 14rpx;
+  padding: 18rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.subtext-lbl { font-size: 22rpx; font-weight: 700; color: #10b981; }
+.subtext-text { font-size: 26rpx; color: #c8cae0; line-height: 1.65; }
+
+/* 策略横幅 */
+.strategy-banner {
+  margin: 0 24rpx 16rpx;
+  background: rgba(124,58,237,.08);
+  border: 1rpx solid rgba(124,58,237,.25);
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+.strategy-lbl { font-size: 22rpx; font-weight: 700; color: #7c3aed; margin-bottom: 8rpx; }
+.strategy-text { font-size: 26rpx; color: #c8cae0; line-height: 1.65; }
+.next-dir { font-size: 23rpx; color: #06b6d4; margin-top: 10rpx; }
+
+/* 风格卡片 */
+.style-list { margin: 0 24rpx; display: flex; flex-direction: column; gap: 16rpx; }
+.style-card {
+  background: #141428;
+  border: 1rpx solid #252545;
+  border-radius: 18rpx;
+  overflow: hidden;
+}
+.style-0 { border-top: 3rpx solid #06b6d4; }
+.style-1 { border-top: 3rpx solid #7c3aed; }
+.style-2 { border-top: 3rpx solid #f59e0b; }
+.style-3 { border-top: 3rpx solid #10b981; }
+.style-4 { border-top: 3rpx solid #ec4899; }
+.sc-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  padding: 18rpx 18rpx 10rpx;
+}
+.sc-icon { font-size: 36rpx; flex-shrink: 0; }
+.sc-meta { flex: 1; }
+.sc-name { font-size: 28rpx; font-weight: 700; color: #e8eaf2; display: block; margin-bottom: 4rpx; }
+.sc-desc { font-size: 22rpx; color: #8b8fa8; display: block; }
+.skill-tag { display: inline-block; margin-top: 8rpx; font-size: 20rpx; color: #f59e0b; background: rgba(245,158,11,.1); border: 1rpx solid rgba(245,158,11,.3); border-radius: 8rpx; padding: 2rpx 10rpx; }
+
+/* 回复列表 */
+.reply-list { padding: 0 18rpx 10rpx; display: flex; flex-direction: column; gap: 10rpx; }
+.reply-item { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.reply-text { flex: 1; font-size: 28rpx; color: #e8eaf2; line-height: 1.5; }
+.btn-copy {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #7c3aed;
+  background: rgba(124,58,237,.1);
+  border: 1rpx solid rgba(124,58,237,.25);
+  border-radius: 8rpx;
+  padding: 6rpx 18rpx;
+}
+
+/* 策略解读 */
+.sc-reasoning {
+  padding: 12rpx 18rpx 16rpx;
+  font-size: 22rpx;
+  color: #555878;
+  line-height: 1.65;
+  border-top: 1rpx solid #181830;
+}
+
+/* 重新输入 */
+.retry-bar { margin: 16rpx 24rpx 0; text-align: center; }
+.btn-retry {
+  display: inline-block;
+  padding: 16rpx 40rpx;
+  font-size: 26rpx;
+  color: #8b8fa8;
+  border: 1rpx solid #252545;
+  border-radius: 16rpx;
+}

@@ -5,7 +5,20 @@
     <text class="top-sub">高价值回复顾问</text>
   </view>
 
-  <!-- 加载中 -->
+  <!-- 速回模式入口 -->
+  <view class="quick-entry" bindtap="goQuick">
+    <view class="qe-left">
+      <text class="qe-icon">⚡</text>
+      <view class="qe-texts">
+        <text class="qe-title">速回模式</text>
+        <text class="qe-sub">截图即得高质量话术 · 无需建檔</text>
+      </view>
+    </view>
+    <text class="qe-arrow">›</text>
+  </view>
+
+  <!-- 分区标题 -->
+  <view class="section-title">🐞 深度狙击 · 专属档案</view>
   <view wx:if="{{loading}}" class="center-box">
     <view class="spinner"></view>
     <text class="hint">加载中...</text>

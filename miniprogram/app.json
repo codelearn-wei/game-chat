@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/chat/chat",
+    "pages/quick/quick",
     "pages/create-session/create-session"
   ],
   "window": {

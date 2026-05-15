@@ -1,0 +1,143 @@
+<view class="page">
+
+  <!-- 自定义顶部导航 -->
+  <view class="qnav">
+    <view class="qnav-back" bindtap="goBack">‹</view>
+    <view class="qnav-center">
+      <text class="qnav-badge">⚡</text>
+      <text class="qnav-title">速回模式</text>
+    </view>
+    <view class="qnav-ph"></view>
+  </view>
+
+  <scroll-view scroll-y class="content">
+    <text class="page-sub">无需建档 · 截图或输入 → 立得高质量话术</text>
+
+    <!-- 输入方式切换 -->
+    <view class="seg-bar">
+      <view class="seg {{inputMode==='screenshot'?'seg-on':''}}" data-mode="screenshot" bindtap="switchMode">
+        📷 截图识别
+      </view>
+      <view class="seg {{inputMode==='text'?'seg-on':''}}" data-mode="text" bindtap="switchMode">
+        ✎ 手动输入
+      </view>
+    </view>
+
+    <!-- ── 截图模式 ── -->
+    <block wx:if="{{inputMode==='screenshot'}}">
+
+      <!-- 空状态：上传按钮 -->
+      <view wx:if="{{parsedMessages.length===0 && !extracting}}" class="upload-zone" bindtap="pickScreenshot">
+        <text class="uz-icon">📷</text>
+        <text class="uz-title">上传聊天截图</text>
+        <text class="uz-sub">AI 自动识别谁说了什么，整理为对话</text>
+      </view>
+
+      <!-- 识别中 -->
+      <view wx:elif="{{extracting}}" class="upload-zone upload-loading">
+        <view class="spinner"></view>
+        <text class="uz-sub">OCR 识别 + AI 解析对话结构中...</text>
+      </view>
+
+      <!-- 识别完成：气泡展示 -->
+      <view wx:else class="conv-card">
+        <view class="cc-hdr">
+          <text class="cc-name">{{girlName}} 的对话</text>
+          <view class="cc-retry" bindtap="pickScreenshot">换一张</view>
+        </view>
+        <view class="chat-bubbles">
+          <view class="bbl-row {{item.role==='me'?'bbl-me-row':'bbl-girl-row'}}"
+                wx:for="{{parsedMessages}}" wx:key="index">
+            <view class="bbl {{item.role==='me'?'bbl-me':'bbl-girl'}}">{{item.content}}</view>
+          </view>
+        </view>
+        <!-- 可编辑的最新消息 -->
+        <view class="last-edit-section">
+          <text class="last-edit-lbl">📌 待分析消息（可修改）</text>
+          <textarea
+            class="last-edit-input"
+            value="{{girlMsg}}"
+            bindinput="onGirlMsgInput"
+            maxlength="2000"
+            auto-height
+          />
+        </view>
+      </view>
+
+    </block>
+
+    <!-- ── 手动输入模式 ── -->
+    <view wx:else class="manual-card">
+      <text class="mc-lbl">她最后发来的消息</text>
+      <textarea
+        class="mc-input"
+        placeholder="粘贴她发的消息，或直接输入..."
+        bindinput="onManualInput"
+        maxlength="2000"
+        auto-height
+      />
+      <text class="mc-count">{{manualLen}} / 2000</text>
+    </view>
+
+    <!-- 分析按钮 -->
+    <view class="ana-btn {{(analyzing||extracting)?'ana-disabled':''}}" bindtap="doAnalyze">
+      <text wx:if="{{!analyzing}}">⚡ 立即分析回复</text>
+      <text wx:else>AI 导师分析中...</text>
+    </view>
+
+    <!-- 加载中 -->
+    <view wx:if="{{analyzing}}" class="loading-box">
+      <view class="spinner"></view>
+    </view>
+
+    <!-- 分析结果 -->
+    <block wx:if="{{result && !analyzing}}">
+
+      <!-- 潜台词 -->
+      <view wx:if="{{result.subtext}}" class="subtext-card">
+        <text class="subtext-lbl">🔍 她的潜台词</text>
+        <text class="subtext-text">{{result.subtext}}</text>
+      </view>
+
+      <!-- 策略横幅 -->
+      <view class="strategy-banner">
+        <view class="strategy-lbl">🎯 策略分析</view>
+        <view class="strategy-text">{{result.overall_strategy}}</view>
+        <view class="next-dir" wx:if="{{result.next_direction}}">→ 下一步：{{result.next_direction}}</view>
+      </view>
+
+      <!-- 回复风格卡片 -->
+      <view class="style-list">
+        <view class="style-card style-{{index}}"
+              wx:for="{{result.styles}}" wx:key="style_name">
+          <view class="sc-head">
+            <text class="sc-icon">{{item.style_icon}}</text>
+            <view class="sc-meta">
+              <text class="sc-name">{{item.style_name}}</text>
+              <text class="sc-desc">{{item.style_desc}}</text>
+              <view class="skill-tag" wx:if="{{item.used_skill}}">🎯 {{item.used_skill}}</view>
+            </view>
+          </view>
+          <view class="reply-list">
+            <view class="reply-item"
+                  wx:for="{{item.replies}}" wx:key="*this" wx:for-item="r">
+              <text class="reply-text">{{r}}</text>
+              <view class="btn-copy" data-text="{{r}}" bindtap="copyReply">复制</view>
+            </view>
+          </view>
+          <view class="sc-reasoning">{{item.reasoning}}</view>
+        </view>
+      </view>
+
+      <!-- 重新分析 -->
+      <view class="retry-bar">
+        <view class="btn-retry" bindtap="clearResult">↩ 重新输入</view>
+      </view>
+
+    </block>
+
+    <!-- bottom padding -->
+    <view style="height:60rpx"></view>
+  </scroll-view>
+
+</view>

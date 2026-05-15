@@ -35,8 +35,26 @@
         <text class="screenshot-tip">推荐：直接截图上传，无需手动输入</text>
       </view>
 
-      <!-- 截图提取结果预览 -->
-      <view wx:if="{{extractedPreview}}" class="extract-preview">
+      <!-- 截图识别结果：对话气泡展示 -->
+      <view wx:if="{{parsedMessages.length > 0}}" class="parsed-conv">
+        <view class="pc-hdr">
+          <text class="pc-lbl">📷 对话识别结果</text>
+          <view class="pc-clear" bindtap="clearExtract">✕ 重拍</view>
+        </view>
+        <view class="pc-bubbles">
+          <view class="pc-row {{item.role==='me'?'pc-row-me':'pc-row-girl'}}"
+                wx:for="{{parsedMessages}}" wx:key="index">
+            <view class="pc-bbl {{item.role==='me'?'pc-bbl-me':'pc-bbl-girl'}}">{{item.content}}</view>
+          </view>
+        </view>
+        <view wx:if="{{autoFilledMsg}}" class="autofill-tip">
+          <text class="autofill-lbl">📌 已识别最新消息，直接点「分析回复」即可</text>
+          <text class="autofill-msg">{{autoFilledMsg}}</text>
+        </view>
+      </view>
+
+      <!-- 截图识别结果：降级原始文本展示 -->
+      <view wx:elif="{{extractedPreview}}" class="extract-preview">
         <view class="ep-header">
           <text class="ep-label">📷 截图识别内容</text>
           <view class="ep-clear" bindtap="clearExtract">✕ 清除</view>

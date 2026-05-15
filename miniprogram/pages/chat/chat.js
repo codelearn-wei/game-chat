@@ -49,6 +49,8 @@ Page({
     });
     wx.setNavigationBarTitle({ title: name });
     this.loadSummary();
+    // 预热服务器（Render 免费版冷启动约 20-30s，提前唤醒避免 OCR 超时）
+    api.ping().catch(() => {});
   },
 
   switchTab(e) {

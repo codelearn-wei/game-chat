@@ -60,6 +60,9 @@ function request(method, path, data) {
 }
 
 const api = {
+  // ── 服务器预热（防止 Render 免费版冷启动超时）──
+  ping: () => request('GET', '/api/conversations').catch(() => {}),
+
   // ── 会话管理 ──
   listConversations: () => request('GET', '/api/conversations'),
   createConversation: (data) => request('POST', '/api/conversations', data),
@@ -88,15 +91,14 @@ const api = {
   // ── 截图 OCR（先压缩图片 → 读 base64 → 普通 request，无需 uploadFile 域名）──
   uploadScreenshot(convId, filePath) {
     return new Promise((resolve, reject) => {
-      // Step 1: 压缩图片到 70% 质量，避免 wx.request 大 body 被截断
       wx.compressImage({
         src: filePath,
-        quality: 70,
+        quality: 50,
         success(compRes) {
           _sendBase64(compRes.tempFilePath, convId, resolve, reject);
         },
         fail() {
-          // 压缩失败时直接用原图兜底
+          // 压缩失败直接用原图
           _sendBase64(filePath, convId, resolve, reject);
         },
       });

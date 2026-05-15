@@ -12,7 +12,7 @@ import logging
 import re
 from pathlib import Path
 
-from models.schemas import AnalyzeRequest, AnalyzeResponse, FeedbackRequest, ReplyStyle
+from models.schemas import AnalyzeRequest, AnalyzeResponse, FeedbackRequest, ReplyStyle, SkillTriggerRequest
 from services.deepseek_client import deepseek
 
 logger = logging.getLogger(__name__)
@@ -89,6 +89,7 @@ _STYLES_JSON = """[
 ]"""
 
 _OUTPUT_SCHEMA = """{
+  "subtext": "她这句话背后的真实情绪/潜台词（1-2句，直接点出她的心理动机）",
   "overall_strategy": "当前局势判断：她的意图/情绪+我方优劣势（2-3句，直接给结论）",
   "next_direction": "本轮回复后下一步推进方向（1-2句，具体可执行）",
   "styles": """ + _STYLES_JSON + """
@@ -173,6 +174,7 @@ def _build_response(data: dict) -> AnalyzeResponse:
             used_skill=s.get("used_skill"),  # 来自 skills.json 的技能名称
         ))
     return AnalyzeResponse(
+        subtext=data.get("subtext", ""),
         overall_strategy=data.get("overall_strategy", ""),
         next_direction=data.get("next_direction", ""),
         styles=styles,
@@ -265,6 +267,7 @@ async def analyze_message(req: AnalyzeRequest) -> AnalyzeResponse:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 输出规则：
+· subtext：1-2句直接点出她的心理动机/潜台词
 · 每条回复 ≤20字，符合真实聊天语气，不要括号说明
 · 每种风格生成 3 条不同回复供选择
 · 严格输出 JSON，不加任何前缀/后缀/代码块标记
@@ -333,4 +336,62 @@ async def feedback_regenerate(req: FeedbackRequest) -> AnalyzeResponse:
         max_tokens=2500,
     )
     logger.info(f"[Advisor] feedback regen done, len={len(raw)}")
+    return _build_response(_parse_json_response(raw))
+
+
+async def skill_trigger_analyze(req: SkillTriggerRequest) -> AnalyzeResponse:
+    """使用指定 Game 技能点，生成专属话术并深度解析技能原理（授人以渔）"""
+    goal_str, context_block = _build_context_blocks(
+        req.girl_message, req.conversation_id, req.context
+    )
+    skills_ref = _load_skills_reference()
+
+    skill_output_schema = (
+        '{\n'
+        '  "subtext": "她这句话背后的真实情绪（1句，直接点出）",\n'
+        f'  "overall_strategy": "为什么此刻用「{req.skill_name}」最有效（2句，结合当前场景分析）",\n'
+        '  "next_direction": "用该技能回复后，下一步如何跟进（1句）",\n'
+        '  "styles": [\n'
+        '    {\n'
+        f'      "style_name": "{req.skill_name}",\n'
+        '      "style_icon": "⚔️",\n'
+        f'      "style_desc": "{req.skill_desc or req.skill_name + " — 精准运用"}",\n'
+        '      "replies": ["回复1（≤20字）", "回复2（≤20字）", "回复3（≤20字）"],\n'
+        f'      "reasoning": "【技能原理解析】{req.skill_name}的底层逻辑是什么 → 这3条回复分别如何体现该技能 → 学员以后遇到类似场景应如何自主调用（3-4句，授人以渔）",\n'
+        f'      "used_skill": "{req.skill_name}"\n'
+        '    }\n'
+        '  ]\n'
+        '}'
+    )
+
+    system = (
+        f"你是顶级恋爱聊天教学导师，现在要用「{req.skill_name}」这个 Game 技能为学员生成精准话术，"
+        "并深度解析技能原理，做到「授人以渔」——不只给话术，更让学员学会背后的方法。\n\n"
+        f"【技能信息】\n技能名称：{req.skill_name}\n"
+        + (f"技能说明：{req.skill_desc}\n" if req.skill_desc else "")
+        + "\n【GAMEMASTER 底层铁律（始终适用）】\n"
+        "① 绝不暴露需求感 ② 情绪稳定松弛 ③ 强主体性自信\n"
+        "④ 反差感语言 ⑤ 冷读潜沟通\n\n"
+        + (skills_ref + "\n\n" if skills_ref else "")
+        + "输出要求：\n"
+        "· subtext：1句直接点出她的心理动机\n"
+        "· 每条回复 ≤20字，符合真实聊天语气，不要括号说明\n"
+        "· reasoning 必须深度解析该技能的底层逻辑，让学员真正理解并能自主运用（3-4句）\n"
+        "· 严格输出 JSON，不加任何前缀/后缀/代码块标记\n\n"
+        + skill_output_schema
+    )
+
+    user_content = (
+        f"聊天目标：{goal_str}\n"
+        f"{context_block}\n"
+        f"【她刚发来的消息】\n{req.girl_message}\n\n"
+        f"请用「{req.skill_name}」技能生成 3 条精准回复，并深度解析技能原理。"
+    )
+
+    raw = await deepseek.chat(
+        [{"role": "system", "content": system}, {"role": "user", "content": user_content}],
+        temperature=0.85,
+        max_tokens=1200,
+    )
+    logger.info(f"[Advisor] skill trigger done, skill={req.skill_name}")
     return _build_response(_parse_json_response(raw))

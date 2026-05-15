@@ -2,7 +2,7 @@
 advisor.py - 回复顾问路由
 """
 from fastapi import APIRouter, HTTPException
-from models.schemas import AnalyzeRequest, AnalyzeResponse, FeedbackRequest
+from models.schemas import AnalyzeRequest, AnalyzeResponse, FeedbackRequest, SkillTriggerRequest
 
 router = APIRouter()
 
@@ -25,3 +25,13 @@ async def feedback(req: FeedbackRequest):
         return await feedback_regenerate(req)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"重新生成失败：{e}")
+
+
+@router.post("/skill-trigger", response_model=AnalyzeResponse)
+async def skill_trigger(req: SkillTriggerRequest):
+    """使用指定 Game 技能生成专属话术 + 技能原理深度解析（授人以渔）"""
+    try:
+        from services.advisor_service import skill_trigger_analyze
+        return await skill_trigger_analyze(req)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"技能分析失败：{e}")

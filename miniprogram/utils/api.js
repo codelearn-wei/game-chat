@@ -99,6 +99,14 @@ const api = {
       });
     });
   },
+
+  skillTrigger: (skillName, skillDesc, girlMessage, conversationId) =>
+    request('POST', '/api/advisor/skill-trigger', {
+      skill_name: skillName,
+      skill_desc: skillDesc || '',
+      girl_message: girlMessage,
+      conversation_id: conversationId || undefined,
+    }),
 };
 
 module.exports = api;

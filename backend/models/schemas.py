@@ -141,13 +141,22 @@ class ReplyStyle(BaseModel):
     replies: List[str]       # 3条具体回复
     reasoning: str           # 导师解读（为什么这么回）
     used_skill: Optional[str] = None  # 使用的技能名称（来自 skills.json）
-    used_skill: Optional[str] = None  # 使用的技能名称（来自 skills.json）
 
 
 class AnalyzeResponse(BaseModel):
+    subtext: str = ""        # 她的潜台词（潜在情绪/需求）
     overall_strategy: str    # 整体策略建议
     next_direction: str      # 下一步方向
     styles: List[ReplyStyle]
+
+
+class SkillTriggerRequest(BaseModel):
+    """点击 Game 技能按钮，生成专属话术 + 技能原理解析"""
+    skill_name: str = Field(..., min_length=1, max_length=30)
+    skill_desc: str = ""
+    girl_message: str = Field(..., min_length=1, max_length=2000)
+    conversation_id: Optional[str] = None
+    context: str = ""
 
 
 class ParseContextRequest(BaseModel):

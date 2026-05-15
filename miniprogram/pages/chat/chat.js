@@ -30,6 +30,19 @@ Page({
     extracting: false,
     extractedPreview: '',
 
+    // 模式 & 技能点
+    mode: 'deep',          // 'quick' | 'deep'
+    skillAnalyzing: false,
+    skillResult: null,
+    GAME_SKILLS: [
+      { name: '冷读', icon: '🔮', desc: '读懂她的潜在需求' },
+      { name: '推拉', icon: '⚡', desc: '情绪张力拉锅战' },
+      { name: '悬念钉', icon: '🌀', desc: '勾起好奇心追问' },
+      { name: '高价値展示', icon: '💎', desc: '植入个人优势' },
+      { name: '奶狗模式', icon: '🐶', desc: '温柔给安全感' },
+      { name: '框架翻转', icon: '🎯', desc: '从朋友转昵昧框架' },
+    ],
+
     // history
     messages: [],
 
@@ -100,6 +113,33 @@ Page({
   clearExtract() {
     this._girlMsg = '';
     this.setData({ extractedPreview: '', girlMsgLen: 0 });
+  },
+
+  tapMode(e) {
+    this.setData({ mode: e.currentTarget.dataset.mode, skillResult: null });
+  },
+
+  async tapSkill(e) {
+    const skill = e.currentTarget.dataset.skill;
+    const msg = (this._girlMsg || '').trim();
+    if (!msg) {
+      wx.showToast({ title: '请先输入她发的消息', icon: 'none' });
+      return;
+    }
+    if (this.data.skillAnalyzing) return;
+    this.setData({ skillAnalyzing: true, skillResult: null });
+    try {
+      const res = await api.skillTrigger(skill.name, skill.desc, msg, this.data.convId);
+      this.setData({ skillResult: res });
+    } catch (err) {
+      wx.showToast({ title: err.message || '生成失败', icon: 'none' });
+    } finally {
+      this.setData({ skillAnalyzing: false });
+    }
+  },
+
+  clearSkillResult() {
+    this.setData({ skillResult: null });
   },
 
   onInput(e) { this._girlMsg = e.detail.value; this.setData({ girlMsgLen: e.detail.value.length }); },

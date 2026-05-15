@@ -388,3 +388,116 @@
   white-space: nowrap;
 }
 .send-btn.disabled { opacity: 0.5; }
+
+/* ── 模式切换栏 ── */
+.mode-bar {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+.mode-opt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 12rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid #252545;
+  background: #141428;
+  gap: 4rpx;
+}
+.mode-on {
+  border-color: rgba(124,58,237,.5);
+  background: rgba(124,58,237,.1);
+}
+.mode-name { font-size: 26rpx; font-weight: 700; color: #8b8fa8; }
+.mode-on .mode-name { color: #a78bfa; }
+.mode-sub { font-size: 20rpx; color: #555878; }
+.mode-on .mode-sub { color: #9d5df0; }
+
+/* ── Game 技能点面板 ── */
+.skill-panel {
+  background: #0f0f22;
+  border: 1rpx solid #252545;
+  border-radius: 18rpx;
+  padding: 20rpx 22rpx;
+  margin-bottom: 20rpx;
+}
+.skill-panel-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.skill-panel-title { font-size: 26rpx; font-weight: 700; color: #f59e0b; }
+.skill-panel-tip { font-size: 20rpx; color: #555878; }
+.skill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.skill-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+  padding: 14rpx 18rpx;
+  background: rgba(245,158,11,.08);
+  border: 1rpx solid rgba(245,158,11,.25);
+  border-radius: 14rpx;
+  min-width: 120rpx;
+}
+.skill-btn-disabled { opacity: .5; }
+.skill-btn-icon { font-size: 32rpx; }
+.skill-btn-name { font-size: 22rpx; color: #f59e0b; font-weight: 600; }
+
+/* ── 潜台词卡片 ── */
+.subtext-card {
+  background: rgba(16,185,129,.06);
+  border: 1rpx solid rgba(16,185,129,.25);
+  border-left: 4rpx solid #10b981;
+  border-radius: 14rpx;
+  padding: 18rpx 20rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.subtext-lbl { font-size: 22rpx; font-weight: 700; color: #10b981; }
+.subtext-text { font-size: 26rpx; color: #c8cae0; line-height: 1.65; }
+
+/* ── 技能回复结果卡 ── */
+.skill-res-card {
+  background: #141428;
+  border: 1rpx solid rgba(245,158,11,.3);
+  border-top: 4rpx solid #f59e0b;
+  border-radius: 18rpx;
+  padding: 22rpx;
+  margin-bottom: 20rpx;
+}
+.skill-res-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.skill-res-title { font-size: 26rpx; font-weight: 700; color: #f59e0b; }
+.skill-res-close { font-size: 26rpx; color: #555878; padding: 4rpx 12rpx; }
+.skill-res-why {
+  font-size: 25rpx;
+  color: #a78bfa;
+  line-height: 1.65;
+  margin-bottom: 8rpx;
+}
+.skill-dir {
+  font-size: 23rpx;
+  color: #06b6d4;
+  margin-bottom: 16rpx;
+}
+.skill-res-reasoning {
+  font-size: 23rpx;
+  color: #8b8fa8;
+  line-height: 1.7;
+  padding-top: 14rpx;
+  border-top: 1rpx solid #252545;
+}

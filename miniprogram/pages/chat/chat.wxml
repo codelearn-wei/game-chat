@@ -10,6 +10,18 @@
   <!-- 回复建议 Tab -->
   <scroll-view wx:if="{{activeTab==='advisor'}}" scroll-y class="tab-content">
 
+    <!-- 模式切换 -->
+    <view class="mode-bar">
+      <view class="mode-opt {{mode==='quick'?'mode-on':''}}" data-mode="quick" bindtap="tapMode">
+        <text class="mode-name">⚡ 速回模式</text>
+        <text class="mode-sub">快速话术，即开即用</text>
+      </view>
+      <view class="mode-opt {{mode==='deep'?'mode-on':''}}" data-mode="deep" bindtap="tapMode">
+        <text class="mode-name">🎯 深度狙击</text>
+        <text class="mode-sub">潜台词 + 策略解读</text>
+      </view>
+    </view>
+
     <!-- 输入区 -->
     <view class="input-card">
       <view class="input-label">她发来了什么？</view>
@@ -51,6 +63,54 @@
       </view>
     </view>
 
+    <!-- Game 技能点 -->
+    <view class="skill-panel">
+      <view class="skill-panel-hd">
+        <text class="skill-panel-title">⚔️ Game 技能点</text>
+        <text class="skill-panel-tip">点击技能 · 即刻生成专属话术</text>
+      </view>
+      <view class="skill-grid">
+        <view class="skill-btn {{skillAnalyzing?'skill-btn-disabled':''}}"
+              wx:for="{{GAME_SKILLS}}" wx:key="name"
+              data-skill="{{item}}" bindtap="tapSkill">
+          <text class="skill-btn-icon">{{item.icon}}</text>
+          <text class="skill-btn-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 技能生成中 -->
+    <view wx:if="{{skillAnalyzing}}" class="loading-box">
+      <view class="spinner"></view>
+      <text>技能施展中...</text>
+    </view>
+
+    <!-- 技能回复结果 -->
+    <block wx:if="{{skillResult && !skillAnalyzing}}">
+      <view class="skill-res-card">
+        <view class="skill-res-hd">
+          <text class="skill-res-title">⚔️ {{skillResult.styles[0].used_skill}} · 技能解析</text>
+          <view class="skill-res-close" bindtap="clearSkillResult">✕</view>
+        </view>
+        <view wx:if="{{skillResult.subtext}}" class="subtext-card">
+          <text class="subtext-lbl">🔍 她的潜台词</text>
+          <text class="subtext-text">{{skillResult.subtext}}</text>
+        </view>
+        <view class="skill-res-why">{{skillResult.overall_strategy}}</view>
+        <view class="skill-dir">→ {{skillResult.next_direction}}</view>
+        <view class="reply-list">
+          <view class="reply-item" wx:for="{{skillResult.styles[0].replies}}" wx:key="*this" wx:for-item="r">
+            <text class="reply-text">{{r}}</text>
+            <view class="reply-btns">
+              <view class="btn-copy" data-text="{{r}}" bindtap="copyReply">复制</view>
+              <view class="btn-sent" data-text="{{r}}" bindtap="markSent">✓ 已发送</view>
+            </view>
+          </view>
+        </view>
+        <view class="skill-res-reasoning">📖 技能原理：{{skillResult.styles[0].reasoning}}</view>
+      </view>
+    </block>
+
     <!-- 加载中 -->
     <view wx:if="{{analyzing}}" class="loading-box">
       <view class="spinner"></view>
@@ -59,6 +119,12 @@
 
     <!-- 结果区域（不会自动消失）-->
     <block wx:if="{{result && !analyzing}}">
+
+      <!-- 潜台词解读 -->
+      <view wx:if="{{result.subtext}}" class="subtext-card">
+        <text class="subtext-lbl">🔍 她的潜台词</text>
+        <text class="subtext-text">{{result.subtext}}</text>
+      </view>
 
       <!-- 策略拖条 -->
       <view class="strategy-banner">
@@ -88,7 +154,7 @@
               </view>
             </view>
           </view>
-          <view class="sc-reasoning">{{item.reasoning}}</view>
+          <view class="sc-reasoning" wx:if="{{mode==='deep'}}">{{item.reasoning}}</view>
         </view>
       </view>
 

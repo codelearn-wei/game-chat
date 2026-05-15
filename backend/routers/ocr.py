@@ -94,9 +94,6 @@ def _preprocess_ocr_words(words_result: list) -> list:
         default=1,
     )
 
-    # WeChat 右侧绿色气泡起始位置通常超过图宽 45%
-    mid = max_right * 0.45
-
     result = []
     for item in words_result:
         if "location" not in item:
@@ -104,6 +101,7 @@ def _preprocess_ocr_words(words_result: list) -> list:
         loc = item["location"]
         text = item["words"].strip()
         left, top, width = loc["left"], loc["top"], loc["width"]
+        right_edge = left + width
 
         if not text:
             continue
@@ -117,7 +115,17 @@ def _preprocess_ocr_words(words_result: list) -> list:
         if width > max_right * 0.68:
             continue
 
-        side = "me" if left > mid else "other"
+        # ── 核心：用「右边界」和「左边界」双锚点判断气泡归属 ──
+        # WeChat 右侧绿色气泡：文字右边界始终贴近屏幕右边（> 88%）
+        if right_edge > max_right * 0.88:
+            side = "me"
+        # WeChat 左侧白色气泡：文字左边界始终紧跟头像（< 20% 宽度处）
+        elif left < max_right * 0.20:
+            side = "other"
+        else:
+            # 既不靠右也不靠左 → 背景图文、指导手册、弹窗等，丢弃
+            continue
+
         result.append({"text": text, "top": top, "side": side})
 
     return result
@@ -147,9 +155,11 @@ async def _parse_conversation_ai(chat_items: list) -> dict:
         "· [左侧] = 左侧区域，可能是「对方名字标签」或「对方发的消息」\n\n"
         "解析规则：\n"
         "1. [左侧] 若内容极短（1~8个字符）且在其他[左侧]消息附近，通常是对方的名字标签，跳过\n"
-        "2. [左侧] 的实质内容即对方说的话\n"
+        "2. [左侧] 的实质性对话内容即对方说的话\n"
         "3. [我] 就是我说的话\n"
-        "4. 忽略非对话内容（提示语、通话记录等）\n\n"
+        "4. 忽略非对话内容（提示语、通话记录等）\n"
+        "5. 重要：[左侧] 若内容是关键词列表、编号条目、指导短语（如「1 破冰」「不附和 不取悦」「话题加油站」「发表状态」等工具性文字），不是真实对话，直接忽略\n"
+        "6. 只保留自然语言对话句子（问候、回应、陈述、疑问等）\n\n"
         f"待解析：\n{annotated}\n\n"
         "仅输出JSON，不加任何说明：\n"
         '{"girl_name":"对方名字（不确定则写她）",'

@@ -34,13 +34,14 @@ app.add_middleware(
 )
 
 # 注册路由
-from routers import chat, skills, sessions, advisor, conversations  # noqa: E402
+from routers import chat, skills, sessions, advisor, conversations, ocr  # noqa: E402
 
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(skills.router, prefix="/api/skills", tags=["Skills"])
 app.include_router(sessions.router, prefix="/api/sessions", tags=["Sessions"])
 app.include_router(advisor.router, prefix="/api/advisor", tags=["Advisor"])
 app.include_router(conversations.router, prefix="/api/conversations", tags=["Conversations"])
+app.include_router(ocr.router, prefix="/api/ocr", tags=["OCR"])
 
 # 挂载 web_demo 静态文件（如果存在）
 WEB_DEMO_DIR = Path(__file__).parent.parent / "web_demo"

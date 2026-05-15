@@ -58,6 +58,40 @@ const api = {
       feedback: feedback,
       conversation_id: conversationId || undefined,
     }),
+
+  // ── 截图 OCR ──
+  uploadScreenshot(convId, filePath) {
+    return new Promise((resolve, reject) => {
+      wx.uploadFile({
+        url: BASE_URL + '/api/ocr/extract',
+        filePath: filePath,
+        name: 'file',
+        formData: { conv_id: convId || '' },
+        success(res) {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              const data = JSON.parse(res.data);
+              resolve(data);
+            } catch (e) {
+              reject(new Error('识别结果解析失败'));
+            }
+          } else {
+            let detail = '';
+            try { detail = JSON.parse(res.data).detail; } catch (_) {}
+            reject(new Error(detail || `识别失败 (${res.statusCode})`));
+          }
+        },
+        fail(err) {
+          const msg = err.errMsg || '';
+          if (msg.includes('domain') || msg.includes('not in domain list')) {
+            reject(new Error('域名未授权，请联系开发者'));
+          } else {
+            reject(new Error('上传失败，请检查网络后重试'));
+          }
+        },
+      });
+    });
+  },
 };
 
 module.exports = api;

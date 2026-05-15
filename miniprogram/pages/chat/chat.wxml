@@ -13,15 +13,37 @@
     <!-- 输入区 -->
     <view class="input-card">
       <view class="input-label">她发来了什么？</view>
+
+      <!-- 截图上传行 -->
+      <view class="screenshot-bar">
+        <view class="btn-screenshot {{extracting?'disabled':''}}" bindtap="pickScreenshot">
+          <text wx:if="{{!extracting}}">📷 上传截图识别</text>
+          <text wx:else>识别中...</text>
+        </view>
+        <text class="screenshot-tip" wx:if="{{!extractedPreview}}">推荐：直接截图上传</text>
+      </view>
+
+      <!-- 截图提取结果预览 -->
+      <view wx:if="{{extractedPreview}}" class="extract-preview">
+        <view class="ep-header">
+          <text class="ep-label">📷 截图识别内容</text>
+          <view class="ep-clear" bindtap="clearExtract">✕ 清除</view>
+        </view>
+        <text class="ep-text">{{extractedPreview}}</text>
+      </view>
+
+      <!-- 分隔线 -->
+      <view class="divider-or"><text>或 手动输入</text></view>
+
       <textarea
         class="msg-input"
         placeholder="粘贴她刚发的消息..."
         bindinput="onInput"
-        maxlength="500"
+        maxlength="2000"
         auto-height
       />
       <view class="input-footer">
-        <text class="char-count">{{girlMsgLen}} / 500</text>
+        <text class="char-count">{{girlMsgLen}} / 2000</text>
         <view class="btn-analyze {{analyzing?'disabled':''}}" bindtap="doAnalyze">
           <text wx:if="{{!analyzing}}">✶ 分析回复</text>
           <text wx:else>分析中...</text>

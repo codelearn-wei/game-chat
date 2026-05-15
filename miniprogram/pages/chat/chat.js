@@ -26,6 +26,10 @@ Page({
     feedback: '',
     reging: false,
 
+    // screenshot OCR
+    extracting: false,
+    extractedPreview: '',
+
     // history
     messages: [],
 
@@ -58,8 +62,54 @@ Page({
   _girlMsg: '',
   _feedback: '',
 
-  onInput(e) { this._girlMsg = e.detail.value; this.setData({ girlMsgLen: e.detail.value.length }); },
+  onInput(e) {
+    this._girlMsg = e.detail.value;
+    this.setData({ girlMsgLen: e.detail.value.length, extractedPreview: '' });
+  },
   onFbInput(e) { this._feedback = e.detail.value; },
+
+  // ── 截图 OCR ──
+  pickScreenshot() {
+    if (this.data.extracting) return;
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const filePath = res.tempFiles[0].tempFilePath;
+        this.setData({ extracting: true, extractedPreview: '' });
+        api.uploadScreenshot(this.data.convId, filePath)
+          .then((data) => {
+            const text = (data.extracted_text || '').trim();
+            if (!text) {
+              wx.showToast({ title: '未识别到文字，请换张清晰截图', icon: 'none' });
+              return;
+            }
+            this._girlMsg = text;
+            this.setData({
+              extractedPreview: text,
+              girlMsgLen: text.length,
+            });
+          })
+          .catch((err) => {
+            wx.showToast({ title: err.message || '识别失败', icon: 'none' });
+          })
+          .finally(() => {
+            this.setData({ extracting: false });
+          });
+      },
+      fail(err) {
+        if (err.errMsg && !err.errMsg.includes('cancel')) {
+          wx.showToast({ title: '选图失败，请重试', icon: 'none' });
+        }
+      },
+    });
+  },
+
+  clearExtract() {
+    this._girlMsg = '';
+    this.setData({ extractedPreview: '', girlMsgLen: 0 });
+  },
 
   async doAnalyze() {
     const msg = (this._girlMsg || '').trim();

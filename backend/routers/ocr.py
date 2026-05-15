@@ -85,16 +85,37 @@ async def _deepseek_clean(raw_lines: list[str]) -> list[dict]:
     """用 DeepSeek 把 OCR 原始行清洗成 [{role, content}] 对话列表。"""
     raw_text = "\n".join(raw_lines)
     prompt = _CLEAN_PROMPT.format(raw=raw_text)
-    reply = await _deepseek.chat(
-        [{"role": "user", "content": prompt}],
-        temperature=0.1,
-        max_tokens=2000,
-    )
-    # 提取 JSON 数组
-    match = re.search(r'\[.*\]', reply, re.DOTALL)
-    if not match:
-        raise RuntimeError("DeepSeek 返回格式异常，无法解析对话")
-    messages = json.loads(match.group())
+    try:
+        reply = await _deepseek.chat(
+            [{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=2000,
+        )
+    except Exception as e:
+        logger.warning(f"[OCR] DeepSeek 调用失败: {e}，回退到原始行")
+        return []
+
+    logger.debug(f"[OCR] DeepSeek 原始回复: {reply[:200]}")
+
+    # 尝试提取 JSON 数组（兼容 markdown 代码块和纯文本）
+    # 优先匹配 ```json ... ``` 块，再匹配裸数组
+    json_str = None
+    for pattern in [r'```(?:json)?\s*(\[[\s\S]*?\])\s*```', r'(\[[\s\S]*\])']:
+        m = re.search(pattern, reply)
+        if m:
+            json_str = m.group(1)
+            break
+
+    if not json_str:
+        logger.warning(f"[OCR] 无法从 DeepSeek 回复中提取 JSON: {reply[:100]}")
+        return []
+
+    try:
+        messages = json.loads(json_str)
+    except json.JSONDecodeError as e:
+        logger.warning(f"[OCR] JSON 解析失败: {e}，内容: {json_str[:100]}")
+        return []
+
     # 只保留 role + content 字段
     result = []
     for m in messages:
@@ -131,26 +152,39 @@ async def extract_screenshot(req: ExtractRequest):
     try:
         # Step 1: 百度 OCR
         raw_lines = await _baidu_ocr(req.image_base64)
+        logger.info(f"[OCR] 百度识别到 {len(raw_lines)} 行原始文字")
+
         if not raw_lines:
-            return {"messages": [], "last_girl_msg": "", "conv_id": req.conv_id}
+            raise HTTPException(status_code=422, detail="未能从截图中识别到任何文字，请确保截图清晰且包含聊天内容")
 
         # Step 2: DeepSeek 清洗
         messages = await _deepseek_clean(raw_lines)
+        logger.info(f"[OCR] DeepSeek 清洗后 {len(messages)} 条对话")
 
-        # Step 3: 找最后一条女生的消息
+        # Step 3: 若 DeepSeek 清洗结果为空，回退到原始行（全部标记为 girl）
+        if not messages:
+            logger.warning("[OCR] DeepSeek 返回空，使用原始 OCR 行作为 fallback")
+            # 过滤掉明显的时间戳/数字行（少于 2 个汉字/字母的行）
+            filtered = [
+                {"role": "girl", "content": line.strip()}
+                for line in raw_lines
+                if len([c for c in line if c.isalpha() or '\u4e00' <= c <= '\u9fff']) >= 2
+            ]
+            messages = filtered if filtered else [{"role": "girl", "content": l.strip()} for l in raw_lines]
+
+        # Step 4: 找最后一条女生的消息
         last_girl_msg = ""
         for m in reversed(messages):
             if m["role"] == "girl":
                 last_girl_msg = m["content"]
                 break
 
-        logger.info(f"[OCR] 识别 {len(raw_lines)} 行 → 清洗为 {len(messages)} 条对话")
         return {"messages": messages, "last_girl_msg": last_girl_msg, "conv_id": req.conv_id}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"OCR 提取失败: {e}")
+        logger.error(f"OCR 提取失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"截图识别失败：{e}")
 
 from __future__ import annotations

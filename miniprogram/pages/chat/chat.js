@@ -94,7 +94,7 @@ Page({
             });
           })
           .catch((err) => {
-            wx.showToast({ title: err.message || '识别失败', icon: 'none' });
+            wx.showToast({ title: err.message || '识别失败，请重试', icon: 'none', duration: 3000 });
           })
           .finally(() => {
             this.setData({ extracting: false });

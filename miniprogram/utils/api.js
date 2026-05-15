@@ -4,6 +4,32 @@
  */
 const { BASE_URL } = require('./config');
 
+// 读取图片文件为 base64 并 POST 到 OCR 接口
+function _sendBase64(filePath, convId, resolve, reject) {
+  wx.getFileSystemManager().readFile({
+    filePath: filePath,
+    encoding: 'base64',
+    success(fileRes) {
+      wx.request({
+        url: BASE_URL + '/api/ocr/extract',
+        method: 'POST',
+        header: { 'Content-Type': 'application/json' },
+        data: { image_base64: fileRes.data, mime_type: 'image/jpeg', conv_id: convId || '' },
+        timeout: 90000,
+        success(res) {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(res.data);
+          } else {
+            reject(new Error((res.data && res.data.detail) || `识别失败 (${res.statusCode})`));
+          }
+        },
+        fail(err) { reject(new Error('网络请求失败：' + (err.errMsg || ''))); },
+      });
+    },
+    fail(err) { reject(new Error('读取图片失败：' + (err.errMsg || ''))); },
+  });
+}
+
 function request(method, path, data) {
   return new Promise((resolve, reject) => {
     wx.request({
@@ -59,34 +85,20 @@ const api = {
       conversation_id: conversationId || undefined,
     }),
 
-  // ── 截图 OCR（读取文件转 base64，用普通 request 发送，无需配置 uploadFile 域名）──
+  // ── 截图 OCR（先压缩图片 → 读 base64 → 普通 request，无需 uploadFile 域名）──
   uploadScreenshot(convId, filePath) {
     return new Promise((resolve, reject) => {
-      wx.getFileSystemManager().readFile({
-        filePath: filePath,
-        encoding: 'base64',
-        success(fileRes) {
-          const lower = filePath.toLowerCase();
-          let mimeType = 'image/jpeg';
-          if (lower.endsWith('.png')) mimeType = 'image/png';
-          else if (lower.endsWith('.webp')) mimeType = 'image/webp';
-
-          wx.request({
-            url: BASE_URL + '/api/ocr/extract',
-            method: 'POST',
-            header: { 'Content-Type': 'application/json' },
-            data: { image_base64: fileRes.data, mime_type: mimeType, conv_id: convId || '' },
-            success(res) {
-              if (res.statusCode >= 200 && res.statusCode < 300) {
-                resolve(res.data);
-              } else {
-                reject(new Error((res.data && res.data.detail) || `识别失败 (${res.statusCode})`));
-              }
-            },
-            fail() { reject(new Error('网络请求失败，请检查网络后重试')); },
-          });
+      // Step 1: 压缩图片到 70% 质量，避免 wx.request 大 body 被截断
+      wx.compressImage({
+        src: filePath,
+        quality: 70,
+        success(compRes) {
+          _sendBase64(compRes.tempFilePath, convId, resolve, reject);
         },
-        fail(err) { reject(new Error('读取图片失败：' + (err.errMsg || ''))); },
+        fail() {
+          // 压缩失败时直接用原图兜底
+          _sendBase64(filePath, convId, resolve, reject);
+        },
       });
     });
   },

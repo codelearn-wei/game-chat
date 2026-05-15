@@ -59,35 +59,43 @@ const api = {
       conversation_id: conversationId || undefined,
     }),
 
-  // ── 截图 OCR ──
+  // ── 截图 OCR（读取文件转 base64，用普通 request 发送，无需配置 uploadFile 域名）──
   uploadScreenshot(convId, filePath) {
     return new Promise((resolve, reject) => {
-      wx.uploadFile({
-        url: BASE_URL + '/api/ocr/extract',
+      wx.getFileSystemManager().readFile({
         filePath: filePath,
-        name: 'file',
-        formData: { conv_id: convId || '' },
-        success(res) {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            try {
-              const data = JSON.parse(res.data);
-              resolve(data);
-            } catch (e) {
-              reject(new Error('识别结果解析失败'));
-            }
-          } else {
-            let detail = '';
-            try { detail = JSON.parse(res.data).detail; } catch (_) {}
-            reject(new Error(detail || `识别失败 (${res.statusCode})`));
-          }
+        encoding: 'base64',
+        success(fileRes) {
+          // 根据后缀推断 mime_type
+          const lower = filePath.toLowerCase();
+          let mimeType = 'image/jpeg';
+          if (lower.endsWith('.png')) mimeType = 'image/png';
+          else if (lower.endsWith('.webp')) mimeType = 'image/webp';
+
+          wx.request({
+            url: BASE_URL + '/api/ocr/extract',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json' },
+            data: {
+              image_base64: fileRes.data,
+              mime_type: mimeType,
+              conv_id: convId || '',
+            },
+            success(res) {
+              if (res.statusCode >= 200 && res.statusCode < 300) {
+                resolve(res.data);
+              } else {
+                const detail = (res.data && res.data.detail) || `识别失败 (${res.statusCode})`;
+                reject(new Error(detail));
+              }
+            },
+            fail(err) {
+              reject(new Error('网络请求失败，请检查网络后重试'));
+            },
+          });
         },
         fail(err) {
-          const msg = err.errMsg || '';
-          if (msg.includes('domain') || msg.includes('not in domain list')) {
-            reject(new Error('域名未授权，请联系开发者'));
-          } else {
-            reject(new Error('上传失败，请检查网络后重试'));
-          }
+          reject(new Error('读取图片失败：' + (err.errMsg || '')));
         },
       });
     });

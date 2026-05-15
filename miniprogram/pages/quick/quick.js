@@ -9,7 +9,8 @@ Page({
     extracting: false,
     parsedMessages: [],       // [{ role: 'me'|'girl', content }]
     girlName: '她',
-    girlMsg: '',              // 受控：auto-filled from OCR，可编辑
+    girlMsg: '',              // 受控：女生最后一句（可编辑确认）
+    formattedContext: '',     // 带角色标注完整对话（我: / 她:），传给 advisor
 
     // 手动模式
     manualLen: 0,
@@ -29,7 +30,7 @@ Page({
     const mode = e.currentTarget.dataset.mode;
     if (mode === this.data.inputMode) return;
     this._manualMsg = '';
-    this.setData({ inputMode: mode, parsedMessages: [], girlMsg: '', result: null, manualLen: 0 });
+    this.setData({ inputMode: mode, parsedMessages: [], girlMsg: '', formattedContext: '', result: null, manualLen: 0 });
   },
 
   // ── 截图模式 ──
@@ -54,6 +55,7 @@ Page({
               parsedMessages: msgs,
               girlName: data.girl_name || '她',
               girlMsg: lastGirl,
+              formattedContext: data.formatted_context || '',
             });
           })
           .catch((err) => {
@@ -90,14 +92,8 @@ Page({
 
     if (this.data.inputMode === 'screenshot') {
       msg = (this.data.girlMsg || '').trim();
-      // 将之前的对话作为上下文
-      const msgs = this.data.parsedMessages;
-      if (msgs.length > 1) {
-        const gName = this.data.girlName;
-        context = msgs.slice(0, -1).map(m =>
-          m.role === 'me' ? `我: ${m.content}` : `${gName}: ${m.content}`
-        ).join('\n');
-      }
+      // 直接使用 OCR 返回的带角色对话上下文
+      context = this.data.formattedContext || '';
     } else {
       msg = (this._manualMsg || '').trim();
     }

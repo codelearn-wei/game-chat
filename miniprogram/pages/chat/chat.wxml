@@ -47,9 +47,16 @@
             <view class="pc-bbl {{item.role==='me'?'pc-bbl-me':'pc-bbl-girl'}}">{{item.content}}</view>
           </view>
         </view>
-        <view wx:if="{{autoFilledMsg}}" class="autofill-tip">
-          <text class="autofill-lbl">📌 已识别最新消息，直接点「分析回复」即可</text>
-          <text class="autofill-msg">{{autoFilledMsg}}</text>
+        <view wx:if="{{autoFilledMsg || parsedMessages.length > 0}}" class="autofill-tip">
+          <text class="autofill-lbl">✏️ 她说的最后一句（可修改，确认后点「分析回复」）</text>
+          <textarea
+            class="autofill-input"
+            value="{{autoFilledMsg}}"
+            bindinput="onConfirmEdit"
+            auto-height
+            maxlength="500"
+            placeholder="AI 识别结果自动填入..."
+          />
         </view>
       </view>
 

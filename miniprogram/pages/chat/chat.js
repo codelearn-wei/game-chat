@@ -31,7 +31,8 @@ Page({
     extractedPreview: '',      // fallback 原始文本
     parsedMessages: [],        // [{ role: 'me'|'girl', content }]
     girlName: '她',
-    autoFilledMsg: '',         // OCR 自动识别的最新消息,
+    autoFilledMsg: '',         // OCR 识别出的女生最后一句（可编辑确认）
+    formattedContext: '',      // 带角色标注的完整对话（我: / 她:），传给 advisor
 
     // 模式 & 技能点
     mode: 'deep',          // 'quick' | 'deep'
@@ -95,13 +96,14 @@ Page({
             const rawText = (data.extracted_text || '').trim();
 
             if (msgs.length > 0) {
-              // 成功解析：展示气泡 + 自动填充最新消息
-              this._girlMsg = lastGirl || rawText;
+              // 成功解析：展示对话气泡，等待用户在确认框中核实最后一句
+              // 注意：不直接设置 this._girlMsg，等用户在可编辑框确认后再设置
               this.setData({
                 parsedMessages: msgs,
                 girlName: data.girl_name || '她',
                 autoFilledMsg: lastGirl,
-                girlMsgLen: (lastGirl || rawText).length,
+                formattedContext: data.formatted_context || '',
+                girlMsgLen: lastGirl.length,
                 extractedPreview: '',
               });
             } else if (rawText && !rawText.startsWith('未识别')) {
@@ -127,9 +129,19 @@ Page({
     });
   },
 
+  // 用户在确认框中编辑了女生最后一句话
+  onConfirmEdit(e) {
+    const val = e.detail.value;
+    this._girlMsg = val;
+    this.setData({ autoFilledMsg: val, girlMsgLen: val.length });
+  },
+
   clearExtract() {
     this._girlMsg = '';
-    this.setData({ extractedPreview: '', parsedMessages: [], girlName: '她', autoFilledMsg: '', girlMsgLen: 0 });
+    this.setData({
+      extractedPreview: '', parsedMessages: [], girlName: '她',
+      autoFilledMsg: '', formattedContext: '', girlMsgLen: 0,
+    });
   },
 
   tapMode(e) {
@@ -163,11 +175,17 @@ Page({
   onFbInput(e) { this._feedback = e.detail.value; },
 
   async doAnalyze() {
-    const msg = (this._girlMsg || '').trim();
+    // OCR 流程：用可编辑确认框的值；手动流程：用 _girlMsg
+    const msg = (
+      this.data.parsedMessages.length > 0
+        ? this.data.autoFilledMsg
+        : this._girlMsg
+    || '').trim();
     if (!msg || this.data.analyzing) return;
+    const context = this.data.formattedContext || '';
     this.setData({ analyzing: true, result: null });
     try {
-      const res = await api.analyzeMessage(msg, this.data.convId);
+      const res = await api.analyzeMessage(msg, this.data.convId, context);
       this.setData({ result: res });
     } catch (e) {
       wx.showToast({ title: e.message, icon: 'none' });

@@ -53,7 +53,7 @@
         </view>
         <!-- 可编辑的最新消息 -->
         <view class="last-edit-section">
-          <text class="last-edit-lbl">📌 待分析消息（可修改）</text>
+          <text class="last-edit-lbl">✏️ 她说的最后一句（可修改，确认后点分析）</text>
           <textarea
             class="last-edit-input"
             value="{{girlMsg}}"

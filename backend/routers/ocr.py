@@ -23,7 +23,8 @@ router = APIRouter()
 BAIDU_API_KEY = os.environ.get("BAIDU_OCR_API_KEY", "V3G6boOFIr1uMhgQY50qeRzu")
 BAIDU_SECRET_KEY = os.environ.get("BAIDU_OCR_SECRET_KEY", "c3ZGfYtbv7J2kBne2to44MJRgq7lxJhn")
 BAIDU_TOKEN_URL = "https://aip.baidubce.com/oauth/2.0/token"
-BAIDU_OCR_URL = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic"
+# 标准含位置版（500次/天免费）——必须用位置版才能区分左右气泡
+BAIDU_OCR_URL = "https://aip.baidubce.com/rest/2.0/ocr/v1/general"
 
 # access_token 内存缓存（有效期 30 天，进程内复用）
 _token_cache: dict = {"token": "", "expires_at": 0.0}
@@ -63,20 +64,93 @@ class ExtractRequest(BaseModel):
     conv_id: str = ""
 
 
-async def _parse_conversation_ai(raw_text: str) -> dict:
-    """用 DeepSeek 将原始 OCR 文本解析为结构化对话（识别谁说了什么）"""
+# 时间戳行正则（过滤用）
+_TS_PAT = re.compile(
+    r'^(\d{1,2}:\d{2}(:\d{2})?'
+    r'|昨天\s*\d{1,2}:\d{2}'
+    r'|今天\s*\d{1,2}:\d{2}'
+    r'|星期[一二三四五六日]\s*\d{1,2}:\d{2}'
+    r'|\d{4}[/-]\d{1,2}[/-]\d{1,2}'
+    r')$'
+)
+
+
+def _preprocess_ocr_words(words_result: list) -> list:
+    """
+    位置感知预处理（需要 general 含位置版 OCR）：
+    · 过滤手机状态栏（顶部 100px 以内）
+    · 过滤时间戳行
+    · 过滤全宽文字块（背景文章/通知/分隔符，超图宽 68%）
+    · 按 left 坐标判断左侧(other)/右侧(me)气泡
+    返回 [{"text": str, "top": int, "side": "me"|"other"}, ...]
+    """
+    if not words_result:
+        return []
+
+    # 所有文字块右边界最大值 ≈ 图片内容宽度
+    max_right = max(
+        (item["location"]["left"] + item["location"]["width"]
+         for item in words_result if "location" in item),
+        default=1,
+    )
+
+    # WeChat 右侧绿色气泡起始位置通常超过图宽 45%
+    mid = max_right * 0.45
+
+    result = []
+    for item in words_result:
+        if "location" not in item:
+            continue
+        loc = item["location"]
+        text = item["words"].strip()
+        left, top, width = loc["left"], loc["top"], loc["width"]
+
+        if not text:
+            continue
+        # 过滤手机状态栏（截图顶部约 100px）
+        if top < 100:
+            continue
+        # 过滤纯时间戳行
+        if _TS_PAT.match(text) and len(text) < 25:
+            continue
+        # 过滤全幅文字（背景文章/标题/系统消息）
+        if width > max_right * 0.68:
+            continue
+
+        side = "me" if left > mid else "other"
+        result.append({"text": text, "top": top, "side": side})
+
+    return result
+
+
+async def _parse_conversation_ai(chat_items: list) -> dict:
+    """
+    用 DeepSeek 将位置分类后的聊天行解析为结构化对话。
+    chat_items: [{"text", "top", "side": "me"|"other"}, ...]
+    """
     from services.deepseek_client import deepseek
 
+    if not chat_items:
+        return {"girl_name": "她", "messages": [], "last_girl_message": "", "formatted_context": ""}
+
+    # 按 top 排序确保时序正确，构建带方向标签的文本
+    chat_items_sorted = sorted(chat_items, key=lambda x: x["top"])
+    lines = []
+    for it in chat_items_sorted:
+        tag = "[我]" if it["side"] == "me" else "[左侧]"
+        lines.append(f"{tag} {it['text']}")
+    annotated = "\n".join(lines)
+
     prompt = (
-        "你是微信聊天截图OCR文本解析器，请将以下OCR原始文字解析成结构化对话。\n\n"
-        "微信截图规律：\n"
-        "· 第一行通常是手机状态栏时间（如 17:03），忽略\n"
-        "· 第二行通常是聊天窗口名称（如 李屹坤 或 123(5)A），忽略\n"
-        "· 时间分隔行（如 15:17、16:02），忽略\n"
-        "· 右侧绿色气泡=我发的：OCR中直接出现消息，没有名字前缀\n"
-        "· 左侧白色气泡=对方发的：OCR中先一行是对方名字，下一行是消息内容\n"
-        "· 同一人连续发多条消息时，名字会在每条消息前重复出现\n\n"
-        f"OCR原文：\n{raw_text}\n\n"
+        "你是微信聊天对话解析器。以下文字来自聊天截图OCR，每行已标注来源方向：\n"
+        "· [我] = 右侧绿色气泡，这是我发的\n"
+        "· [左侧] = 左侧区域，可能是「对方名字标签」或「对方发的消息」\n\n"
+        "解析规则：\n"
+        "1. [左侧] 若内容极短（1~8个字符）且在其他[左侧]消息附近，通常是对方的名字标签，跳过\n"
+        "2. [左侧] 的实质内容即对方说的话\n"
+        "3. [我] 就是我说的话\n"
+        "4. 忽略非对话内容（提示语、通话记录等）\n\n"
+        f"待解析：\n{annotated}\n\n"
         "仅输出JSON，不加任何说明：\n"
         '{"girl_name":"对方名字（不确定则写她）",'
         '"messages":[{"role":"me","content":"消息"},{"role":"girl","content":"消息"}],'
@@ -109,7 +183,7 @@ async def _parse_conversation_ai(raw_text: str) -> dict:
         }
     except Exception as e:
         logger.warning(f"[OCR] AI对话解析失败: {e}")
-        return {"girl_name": "她", "messages": [], "last_girl_message": "", "formatted_context": raw_text}
+        return {"girl_name": "她", "messages": [], "last_girl_message": "", "formatted_context": ""}
 
 
 @router.post("/extract")
@@ -140,19 +214,26 @@ async def extract_screenshot(req: ExtractRequest):
                 f"百度 OCR 错误 {data['error_code']}: {data.get('error_msg')}"
             )
 
-        words = [item["words"] for item in data.get("words_result", [])]
-        extracted = "\n".join(words).strip()
+        words_result = data.get("words_result", [])
 
+        # ── 位置感知预处理：过滤背景文字，区分左右气泡 ──
+        chat_items = _preprocess_ocr_words(words_result)
+
+        # 保留原始文本用于日志 / 降级展示
+        extracted = "\n".join(it["text"] for it in chat_items).strip()
         if not extracted:
             extracted = "未识别到文字，请换一张更清晰的截图"
 
-        # 用 AI 解析对话结构（识别谁说了什么）
-        if extracted and not extracted.startswith("未识别"):
-            parsed = await _parse_conversation_ai(extracted)
+        # ── AI 解析对话结构 ──
+        if chat_items:
+            parsed = await _parse_conversation_ai(chat_items)
         else:
             parsed = {"girl_name": "她", "messages": [], "last_girl_message": "", "formatted_context": extracted}
 
-        logger.info(f"[Baidu OCR] 识别 {len(words)} 行，解析 {len(parsed['messages'])} 条消息")
+        logger.info(
+            f"[Baidu OCR] 原始{len(words_result)}行 → 过滤后{len(chat_items)}行"
+            f" → 解析{len(parsed['messages'])}条消息"
+        )
         return {
             "extracted_text": extracted,
             "conv_id": req.conv_id,

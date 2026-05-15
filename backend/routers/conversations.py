@@ -36,10 +36,6 @@ class RecordRequest(BaseModel):
     used_reply: str = Field(..., min_length=1, max_length=500)
 
 
-class BatchRecordRequest(BaseModel):
-    messages: list  # [{role: 'girl'|'me', content: str}]
-
-
 # ─── 路由 ─────────────────────────────────────────────────
 
 @router.get("")
@@ -91,23 +87,6 @@ async def record_message(conv_id: str, req: RecordRequest):
         raise HTTPException(status_code=404, detail="会话不存在")
     msg = add_message(conv_id, "user", req.used_reply)
     return {"ok": True, "message": msg}
-
-
-@router.post("/{conv_id}/batch-record")
-async def batch_record_messages(conv_id: str, req: BatchRecordRequest):
-    """批量记录截图提取的对话（角色：girl 或 me/user）"""
-    from services.conversation_service import get_conversation, add_message
-    if not get_conversation(conv_id):
-        raise HTTPException(status_code=404, detail="会话不存在")
-    count = 0
-    for m in req.messages:
-        role = m.get("role", "girl")
-        role = "user" if role == "me" else role
-        content = (m.get("content") or "").strip()
-        if content:
-            add_message(conv_id, role, content)
-            count += 1
-    return {"ok": True, "count": count}
 
 
 @router.post("/{conv_id}/summarize")

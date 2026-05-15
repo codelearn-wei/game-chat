@@ -28,7 +28,7 @@ Page({
 
     // screenshot OCR
     extracting: false,
-    ocrMessages: [],      // [{role:'girl'|'me', content:str}]
+    extractedPreview: '',
 
     // history
     messages: [],
@@ -49,8 +49,6 @@ Page({
     });
     wx.setNavigationBarTitle({ title: name });
     this.loadSummary();
-    // 预热服务器（Render 免费版冷启动约 20-30s，提前唤醒避免 OCR 超时）
-    api.ping().catch(() => {});
   },
 
   switchTab(e) {
@@ -64,12 +62,6 @@ Page({
   _girlMsg: '',
   _feedback: '',
 
-  onInput(e) {
-    this._girlMsg = e.detail.value;
-    this.setData({ girlMsgLen: e.detail.value.length, ocrMessages: [] });
-  },
-  onFbInput(e) { this._feedback = e.detail.value; },
-
   // ── 截图 OCR ──
   pickScreenshot() {
     if (this.data.extracting) return;
@@ -79,24 +71,19 @@ Page({
       sourceType: ['album', 'camera'],
       success: (res) => {
         const filePath = res.tempFiles[0].tempFilePath;
-        this.setData({ extracting: true, ocrMessages: [] });
+        this.setData({ extracting: true, extractedPreview: '' });
         api.uploadScreenshot(this.data.convId, filePath)
           .then((data) => {
-            const msgs = data.messages || [];
-            if (!msgs.length) {
-              wx.showToast({ title: '未识别到内容，请换张清晰截图', icon: 'none' });
+            const text = (data.extracted_text || '').trim();
+            if (!text || text.startsWith('未识别')) {
+              wx.showToast({ title: '未识别到文字，请换张清晰截图', icon: 'none' });
               return;
             }
-            // 取最后一条女生消息作为分析输入
-            const lastGirl = data.last_girl_msg || '';
-            this._girlMsg = lastGirl;
-            this.setData({
-              ocrMessages: msgs,
-              girlMsgLen: lastGirl.length,
-            });
+            this._girlMsg = text;
+            this.setData({ extractedPreview: text, girlMsgLen: text.length });
           })
           .catch((err) => {
-            wx.showToast({ title: err.message || '识别失败，请重试', icon: 'none', duration: 3000 });
+            wx.showToast({ title: err.message || '识别失败', icon: 'none' });
           })
           .finally(() => {
             this.setData({ extracting: false });
@@ -112,19 +99,11 @@ Page({
 
   clearExtract() {
     this._girlMsg = '';
-    this.setData({ ocrMessages: [], girlMsgLen: 0 });
+    this.setData({ extractedPreview: '', girlMsgLen: 0 });
   },
 
-  async saveOcrToHistory() {
-    const msgs = this.data.ocrMessages;
-    if (!msgs.length) return;
-    try {
-      await api.batchRecord(this.data.convId, msgs);
-      wx.showToast({ title: '已存入记录', icon: 'success' });
-    } catch (e) {
-      wx.showToast({ title: e.message, icon: 'none' });
-    }
-  },
+  onInput(e) { this._girlMsg = e.detail.value; this.setData({ girlMsgLen: e.detail.value.length }); },
+  onFbInput(e) { this._feedback = e.detail.value; },
 
   async doAnalyze() {
     const msg = (this._girlMsg || '').trim();

@@ -28,7 +28,7 @@ Page({
 
     // screenshot OCR
     extracting: false,
-    extractedPreview: '',
+    ocrMessages: [],      // [{role:'girl'|'me', content:str}]
 
     // history
     messages: [],
@@ -64,7 +64,7 @@ Page({
 
   onInput(e) {
     this._girlMsg = e.detail.value;
-    this.setData({ girlMsgLen: e.detail.value.length, extractedPreview: '' });
+    this.setData({ girlMsgLen: e.detail.value.length, ocrMessages: [] });
   },
   onFbInput(e) { this._feedback = e.detail.value; },
 
@@ -77,18 +77,20 @@ Page({
       sourceType: ['album', 'camera'],
       success: (res) => {
         const filePath = res.tempFiles[0].tempFilePath;
-        this.setData({ extracting: true, extractedPreview: '' });
+        this.setData({ extracting: true, ocrMessages: [] });
         api.uploadScreenshot(this.data.convId, filePath)
           .then((data) => {
-            const text = (data.extracted_text || '').trim();
-            if (!text) {
-              wx.showToast({ title: '未识别到文字，请换张清晰截图', icon: 'none' });
+            const msgs = data.messages || [];
+            if (!msgs.length) {
+              wx.showToast({ title: '未识别到内容，请换张清晰截图', icon: 'none' });
               return;
             }
-            this._girlMsg = text;
+            // 取最后一条女生消息作为分析输入
+            const lastGirl = data.last_girl_msg || '';
+            this._girlMsg = lastGirl;
             this.setData({
-              extractedPreview: text,
-              girlMsgLen: text.length,
+              ocrMessages: msgs,
+              girlMsgLen: lastGirl.length,
             });
           })
           .catch((err) => {
@@ -108,7 +110,18 @@ Page({
 
   clearExtract() {
     this._girlMsg = '';
-    this.setData({ extractedPreview: '', girlMsgLen: 0 });
+    this.setData({ ocrMessages: [], girlMsgLen: 0 });
+  },
+
+  async saveOcrToHistory() {
+    const msgs = this.data.ocrMessages;
+    if (!msgs.length) return;
+    try {
+      await api.batchRecord(this.data.convId, msgs);
+      wx.showToast({ title: '已存入记录', icon: 'success' });
+    } catch (e) {
+      wx.showToast({ title: e.message, icon: 'none' });
+    }
   },
 
   async doAnalyze() {

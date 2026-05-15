@@ -66,7 +66,6 @@ const api = {
         filePath: filePath,
         encoding: 'base64',
         success(fileRes) {
-          // 根据后缀推断 mime_type
           const lower = filePath.toLowerCase();
           let mimeType = 'image/jpeg';
           if (lower.endsWith('.png')) mimeType = 'image/png';
@@ -76,30 +75,25 @@ const api = {
             url: BASE_URL + '/api/ocr/extract',
             method: 'POST',
             header: { 'Content-Type': 'application/json' },
-            data: {
-              image_base64: fileRes.data,
-              mime_type: mimeType,
-              conv_id: convId || '',
-            },
+            data: { image_base64: fileRes.data, mime_type: mimeType, conv_id: convId || '' },
             success(res) {
               if (res.statusCode >= 200 && res.statusCode < 300) {
                 resolve(res.data);
               } else {
-                const detail = (res.data && res.data.detail) || `识别失败 (${res.statusCode})`;
-                reject(new Error(detail));
+                reject(new Error((res.data && res.data.detail) || `识别失败 (${res.statusCode})`));
               }
             },
-            fail(err) {
-              reject(new Error('网络请求失败，请检查网络后重试'));
-            },
+            fail() { reject(new Error('网络请求失败，请检查网络后重试')); },
           });
         },
-        fail(err) {
-          reject(new Error('读取图片失败：' + (err.errMsg || '')));
-        },
+        fail(err) { reject(new Error('读取图片失败：' + (err.errMsg || ''))); },
       });
     });
   },
+
+  // ── 批量记录截图提取的对话 ──
+  batchRecord: (convId, messages) =>
+    request('POST', `/api/conversations/${convId}/batch-record`, { messages }),
 };
 
 module.exports = api;

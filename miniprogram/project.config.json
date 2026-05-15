@@ -1,4 +1,4 @@
-{
+﻿{
   "description": "AI 聊天框架 - 微信小程序",
   "projectname": "ai-chat-framework",
   "appid": "wx33df3c190fa3ba56",
@@ -6,14 +6,8 @@
   "libVersion": "3.16.0",
   "packOptions": {
     "ignore": [
-      {
-        "value": ".git",
-        "type": "folder"
-      },
-      {
-        "value": "node_modules",
-        "type": "folder"
-      }
+      { "value": ".git", "type": "folder" },
+      { "value": "node_modules", "type": "folder" }
     ],
     "include": []
   },

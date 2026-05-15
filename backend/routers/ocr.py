@@ -77,17 +77,14 @@ _TS_PAT = re.compile(
 
 def _preprocess_ocr_words(words_result: list) -> list:
     """
-    位置感知预处理（需要 general 含位置版 OCR）：
-    · 过滤手机状态栏（顶部 100px 以内）
-    · 过滤时间戳行
-    · 过滤全宽文字块（背景文章/通知/分隔符，超图宽 68%）
-    · 按 left 坐标判断左侧(other)/右侧(me)气泡
-    返回 [{"text": str, "top": int, "side": "me"|"other"}, ...]
+    轻量预处理：只做最基础的清洗，把判断权交给 AI。
+    只丢弃：状态栏顶行 / 纯时间戳。
+    其余全部保留，按位置软分类为 me / other / ?（居中不确定）。
+    去掉原来的全幅宽度过滤——那个阈值会把女生的长消息也错误丢掉。
     """
     if not words_result:
         return []
 
-    # 所有文字块右边界最大值 ≈ 图片内容宽度
     max_right = max(
         (item["location"]["left"] + item["location"]["width"]
          for item in words_result if "location" in item),
@@ -105,26 +102,24 @@ def _preprocess_ocr_words(words_result: list) -> list:
 
         if not text:
             continue
-        # 过滤手机状态栏（截图顶部约 100px）
+        # 仅丢弃手机状态栏（截图最顶部）
         if top < 100:
             continue
-        # 过滤纯时间戳行
+        # 仅丢弃纯时间戳行
         if _TS_PAT.match(text) and len(text) < 25:
             continue
-        # 过滤全幅文字（背景文章/标题/系统消息）
-        if width > max_right * 0.68:
-            continue
 
-        # ── 核心：用「右边界」和「左边界」双锚点判断气泡归属 ──
-        # WeChat 右侧绿色气泡：文字右边界始终贴近屏幕右边（> 88%）
-        if right_edge > max_right * 0.88:
+        # ── 软分类（AI 会做最终判断，这里只是辅助）──
+        # WeChat 右气泡：文字右边界贴近屏幕右侧
+        if right_edge > max_right * 0.85:
             side = "me"
-        # WeChat 左侧白色气泡：文字左边界始终紧跟头像（< 20% 宽度处）
-        elif left < max_right * 0.20:
+        # WeChat 左气泡：文字左边界贴近头像右侧（屏幕左 ~20%）
+        elif left < max_right * 0.22:
             side = "other"
         else:
-            # 既不靠右也不靠左 → 背景图文、指导手册、弹窗等，丢弃
-            continue
+            # 居中：可能是长气泡的延伸、背景指导文字、系统弹窗
+            # 不丢弃，交给 AI 根据上下文判断
+            side = "?"
 
         result.append({"text": text, "top": top, "side": side})
 
@@ -145,37 +140,42 @@ async def _parse_conversation_ai(chat_items: list) -> dict:
     chat_items_sorted = sorted(chat_items, key=lambda x: x["top"])
     lines = []
     for it in chat_items_sorted:
-        tag = "[我]" if it["side"] == "me" else "[左侧]"
+        if it["side"] == "me":
+            tag = "[我]"
+        elif it["side"] == "other":
+            tag = "[她]"
+        else:
+            tag = "[?]"
         lines.append(f"{tag} {it['text']}")
     annotated = "\n".join(lines)
 
     prompt = (
-        "你是微信聊天截图解析助手。以下 OCR 文字已用位置分析标注了发言方向：\n"
-        "· [我]   = 屏幕右侧绿色气泡 → 这是「我」发的消息\n"
-        "· [左侧] = 屏幕左侧区域 → 可能是「对方消息」「对方名字标签」或「背景干扰文字」\n\n"
-        "【过滤规则 — 以下必须丢弃】\n"
-        "A. [左侧] 出现的极短词组（1~8字）且位于其他 [左侧] 消息之间 → 是名字标签，跳过\n"
-        "B. 关键词列表 / 编号条目（如「1 破冰」「2 共鸣」「发表状态」）→ 背景手册，跳过\n"
-        "C. 工具性短语（如「不附和 不取悦」「话题加油站」「打出差异化」）→ 背景手册，跳过\n"
-        "D. 系统提示 / 通话记录 / 时间戳 → 跳过\n\n"
-        "【保留规则】\n"
-        "· 只保留真实聊天句子：自然语言表达（问候、回应、陈述、疑问、语气词等）\n"
-        "· 注意：「好的呀」「嗯嗯」「哈哈」等短回应也是真实对话，不要丢弃\n\n"
-        "【字段说明】\n"
-        "· messages：按时间顺序，role=\"me\"表示我说的，role=\"girl\"表示对方说的\n"
-        "· last_girl_message：对方（女生）在这段截图中 **最后说的那句话**（必须是 role=girl 的消息，不能是我说的）\n\n"
-        f"待解析文字：\n{annotated}\n\n"
-        "仅输出 JSON，不加任何说明，不加 markdown 代码块：\n"
+        "你是微信聊天截图解析专家。以下是对截图做 OCR + 位置分析后的结果，"
+        "每行文字已按屏幕位置做了初步标注：\n"
+        "  [我]  = 屏幕右侧气泡，确认是我发的\n"
+        "  [她]  = 屏幕左侧气泡，确认是对方发的\n"
+        "  [?]   = 位置居中，初步判断不确定（可能是：长气泡、背景指导文字、弹窗通知）\n\n"
+        "你的任务：\n"
+        "1. 阅读所有行，识别真实聊天消息，过滤干扰内容\n"
+        "2. 对 [?] 行，结合上下文判断是否是真实聊天（如与前后消息语义连贯 → 归为 me 或 girl）\n"
+        "3. 以下 [?] 必须丢弃：工具性词组（如「不附和」「话题加油站」「1 破冰」）、"
+        "广告文案、与聊天无关的句子\n"
+        "4. [她] 中极短词组（1~6字）夹在消息中间 → 是名字标签，丢弃\n"
+        "5. 「好的呀」「嗯嗯」「哈哈」「好啊」等短回应 → 真实聊天，保留\n"
+        "6. 同一人连续发的多条消息，每条单独列为一个 message\n\n"
+        "last_girl_message：截图中对方最后说的那句话（role=girl 的最后一条）\n\n"
+        f"OCR 结果（从上到下）：\n{annotated}\n\n"
+        "只输出 JSON，不加 markdown 代码块，不加任何说明：\n"
         '{"girl_name":"对方名字（不确定则写她）",'
-        '"messages":[{"role":"me","content":"消息内容"},{"role":"girl","content":"消息内容"}],'
-        '"last_girl_message":"对方最后说的那句话"}'
+        '"messages":[{"role":"me","content":"..."},{"role":"girl","content":"..."}],'
+        '"last_girl_message":"..."}'
     )
 
     try:
         raw = await deepseek.chat(
             [{"role": "user", "content": prompt}],
             temperature=0.1,
-            max_tokens=800,
+            max_tokens=1200,
         )
         try:
             result = json.loads(raw.strip())
